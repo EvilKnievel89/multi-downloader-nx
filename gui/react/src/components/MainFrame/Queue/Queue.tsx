@@ -78,7 +78,7 @@ const Queue: React.FC = () => {
 	const hasActive = Boolean(data || current);
 
 	return (
-		<Box sx={{ width: '100%', maxWidth: '62rem', display: 'flex', flexDirection: 'column', gap: 2 }}>
+		<Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
 			{hasActive && <ActiveDownload data={data} current={current} />}
 
 			{queue.length > 0 && (

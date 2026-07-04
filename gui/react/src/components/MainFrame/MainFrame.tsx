@@ -4,7 +4,7 @@ import Queue from './Queue/Queue';
 
 const MainFrame: React.FC = () => {
 	return (
-		<Box sx={{}}>
+		<Box sx={{ width: '100%' }}>
 			<Queue />
 		</Box>
 	);
