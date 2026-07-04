@@ -96,7 +96,7 @@ class CrunchyHandler extends Base implements MessageHandler {
 		return this.crunchy.doAuth(data);
 	}
 
-	public async downloadItem(data: DownloadData) {
+	protected async performDownload(data: DownloadData) {
 		this.getDefaults();
 		await this.crunchy.refreshToken(true);
 		console.debug(`Got download options: ${JSON.stringify(data)}`);
@@ -131,9 +131,6 @@ class CrunchyHandler extends Base implements MessageHandler {
 		} else {
 			this.alertError(res.reason);
 		}
-		this.sendMessage({ name: 'finish', data: undefined });
-		this.setDownloading(false);
-		this.onFinish();
 	}
 }
 

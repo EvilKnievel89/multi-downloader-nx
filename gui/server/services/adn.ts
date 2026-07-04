@@ -111,7 +111,7 @@ class ADNHandler extends Base implements MessageHandler {
 		};
 	}
 
-	public async downloadItem(data: DownloadData) {
+	protected async performDownload(data: DownloadData) {
 		this.setDownloading(true);
 		console.debug(`Got download options: ${JSON.stringify(data)}`);
 		const _default = yargs.appArgv(this.adn.cfg.cli, true);
@@ -142,9 +142,6 @@ class ADNHandler extends Base implements MessageHandler {
 		} else {
 			this.alertError(new Error('Failed to download episode, check for additional logs.'));
 		}
-		this.sendMessage({ name: 'finish', data: undefined });
-		this.setDownloading(false);
-		this.onFinish();
 	}
 }
 

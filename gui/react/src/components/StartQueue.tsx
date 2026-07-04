@@ -16,6 +16,17 @@ const StartQueueButton: React.FC = () => {
 		})();
 	}, []);
 
+	// Keep the button in sync with the backend: when the queue finishes on its own
+	// the server stops working on it, so re-read the state on every queue change.
+	React.useEffect(() => {
+		if (!msg) return;
+		const handler = () => {
+			msg.getDownloadQueue().then(setStart);
+		};
+		msg.randomEvents.on('queueChange', handler);
+		return () => msg.randomEvents.removeListener('queueChange', handler);
+	}, [msg]);
+
 	const change = async () => {
 		if (await messageChannel?.isDownloading()) alert('The current download will be finished before the queue stops');
 		msg?.setDownloadQueue(!start);

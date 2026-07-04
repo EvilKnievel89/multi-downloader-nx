@@ -137,12 +137,38 @@ export default class Base {
 
 	public async onFinish() {
 		this.sendMessage({ name: 'current', data: undefined });
+		// Nothing left to process once the queue is drained, so stop working on it
+		// instead of leaving it "armed" — otherwise a newly added item would start
+		// downloading without the user pressing start again. Set before queueChange()
+		// so the broadcast carries the final state (the button re-syncs from it).
+		if (this.queue.length === 0) {
+			this.workOnQueue = false;
+		}
 		this.queueChange();
+	}
+
+	/**
+	 * Template method. Runs the service-specific download and then GUARANTEES the
+	 * completion trio (finish event → clear downloading flag → onFinish) runs, even
+	 * if performDownload returns early or throws. Without this a failed/aborted
+	 * download would leave the queue stuck: `downloading` and `workOnQueue` would
+	 * never reset, no further item would start, and the queue could not auto-stop.
+	 */
+	public async downloadItem(data: QueueItem) {
+		try {
+			await this.performDownload(data);
+		} catch (error) {
+			this.alertError(error as Error);
+		} finally {
+			this.sendMessage({ name: 'finish', data: undefined });
+			this.setDownloading(false);
+			this.onFinish();
+		}
 	}
 
 	//Overriten
 	// eslint-disable-next-line
-	public async downloadItem(_: QueueItem) {
-		throw new Error('downloadItem not overriden');
+	protected async performDownload(_: QueueItem) {
+		throw new Error('performDownload not overriden');
 	}
 }

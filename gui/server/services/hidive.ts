@@ -106,7 +106,7 @@ class HidiveHandler extends Base implements MessageHandler {
 		};
 	}
 
-	public async downloadItem(data: DownloadData) {
+	protected async performDownload(data: DownloadData) {
 		this.setDownloading(true);
 		console.debug(`Got download options: ${JSON.stringify(data)}`);
 		const _default = yargs.appArgv(this.hidive.cfg.cli, true);
@@ -126,9 +126,6 @@ class HidiveHandler extends Base implements MessageHandler {
 				novids: data.novids
 			});
 		}
-		this.sendMessage({ name: 'finish', data: undefined });
-		this.setDownloading(false);
-		this.onFinish();
 	}
 }
 
