@@ -11,10 +11,6 @@ import Store from './provider/Store';
 import ErrorHandler from './provider/ErrorHandler';
 import QueueProvider from './provider/QueueProvider';
 
-document.body.style.backgroundColor = 'rgb(0, 30, 60)';
-document.body.style.display = 'flex';
-document.body.style.justifyContent = 'center';
-
 const notistackRef = React.createRef<SnackbarProvider>();
 const onClickDismiss = (key: SnackbarKey | undefined) => () => {
 	if (notistackRef.current) notistackRef.current.closeSnackbar(key);
@@ -27,6 +23,8 @@ root.render(
 		<Store>
 			<SnackbarProvider
 				ref={notistackRef}
+				maxSnack={3}
+				anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
 				action={(key) => (
 					<IconButton onClick={onClickDismiss(key)} color="inherit">
 						<CloseOutlined />
@@ -37,7 +35,7 @@ root.render(
 					<MessageChannel>
 						<ServiceProvider>
 							<QueueProvider>
-								<Box>
+								<Box sx={{ width: '100%' }}>
 									<App />
 								</Box>
 							</QueueProvider>

@@ -1,8 +1,8 @@
 import React from 'react';
-import Layout from './Layout';
+import AppShell from './components/Shell/AppShell';
 
 const App: React.FC = () => {
-	return <Layout />;
+	return <AppShell />;
 };
 
 export default App;

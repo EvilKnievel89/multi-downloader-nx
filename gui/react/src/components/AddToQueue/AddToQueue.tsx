@@ -5,7 +5,7 @@ import DownloadSelector from './DownloadSelector/DownloadSelector';
 import EpisodeListing from './DownloadSelector/Listing/EpisodeListing';
 import SearchBox from './SearchBox/SearchBox';
 
-const AddToQueue: React.FC = () => {
+const AddToQueue: React.FC<{ disabled?: boolean }> = ({ disabled }) => {
 	const [isOpen, setOpen] = React.useState(false);
 
 	return (
@@ -18,8 +18,7 @@ const AddToQueue: React.FC = () => {
 					<DownloadSelector onFinish={() => setOpen(false)} />
 				</Box>
 			</Dialog>
-			<Button variant="contained" onClick={() => setOpen(true)} sx={{ maxHeight: '2.3rem' }}>
-				<Add />
+			<Button variant="contained" startIcon={<Add />} disabled={disabled} onClick={() => setOpen(true)} sx={{ maxHeight: '2.3rem' }}>
 				Add to Queue
 			</Button>
 		</Box>

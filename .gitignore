@@ -45,3 +45,4 @@ widevine/*
 !widevine/.gitkeep
 playready/*
 !playready/.gitkeep
+GUI-REWRITE-PLAN.md

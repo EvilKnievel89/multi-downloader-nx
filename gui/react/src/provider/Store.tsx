@@ -18,11 +18,14 @@ export type DownloadOptions = {
 	noaudio: boolean;
 };
 
+export type View = 'downloads' | 'console' | 'settings';
+
 export type StoreState = {
 	episodeListing: Episode[];
 	downloadOptions: DownloadOptions;
 	service: 'crunchy' | 'hidive' | 'adn' | undefined;
 	version: string;
+	view: View;
 };
 
 export type StoreAction<T extends keyof StoreState> = {
@@ -55,7 +58,8 @@ const initialState: StoreState = {
 	},
 	service: undefined,
 	episodeListing: [],
-	version: ''
+	version: '',
+	view: 'downloads'
 };
 
 const Store: FCWithChildren = ({ children }) => {

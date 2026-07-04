@@ -8,6 +8,10 @@ import HidiveHandler from './services/hidive';
 import ADNHandler from './services/adn';
 import WebSocketHandler from './websocket';
 import packageJson from '../../package.json';
+import { registerLogSink } from '../../modules/log';
+import { cfg } from '.';
+import open from 'open';
+import path from 'path';
 
 export default class ServiceHandler {
 	private service: MessageHandler | undefined = undefined;
@@ -16,6 +20,8 @@ export default class ServiceHandler {
 
 	constructor(server: Server<typeof IncomingMessage, typeof ServerResponse>) {
 		this.ws = new WebSocketHandler(server);
+		// Stream log lines to any connected GUI client (Console view).
+		registerLogSink((line) => this.ws.sendMessage({ name: 'log', data: line }));
 		this.handleMessages();
 		this.state = getState();
 	}
@@ -85,16 +91,19 @@ export default class ServiceHandler {
 			this.service?.downloadItem(data);
 			respond(undefined);
 		});
+		// Generic filesystem/URL helpers — intentionally independent of the active
+		// service so the Settings view works before a service is selected.
 		this.ws.events.on('openFolder', async ({ data }, respond) => {
-			this.service?.openFolder(data);
+			if (data === 'content') open(cfg.dir.content);
+			else if (data === 'config') open(cfg.dir.config);
 			respond(undefined);
 		});
 		this.ws.events.on('openFile', async ({ data }, respond) => {
-			this.service?.openFile(data);
+			if (data[0] === 'config') open(path.join(cfg.dir.config, data[1]));
 			respond(undefined);
 		});
 		this.ws.events.on('openURL', async ({ data }, respond) => {
-			this.service?.openURL(data);
+			open(data);
 			respond(undefined);
 		});
 		this.ws.events.on('getQueue', async (_, respond) => {
