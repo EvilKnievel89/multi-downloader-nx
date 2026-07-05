@@ -4,6 +4,18 @@
 
 This downloader can download anime from different sites. Currently supported are *Crunchyroll*, *Hidive* and *AnimationDigitalNetwork*.
 
+## Graphical Interface
+
+Alongside the CLI, AniDL ships a modern desktop GUI — a local web app (React + MUI, **no Electron**) that drives the same downloader core.
+
+![Modern GUI](./imgs/gui-modern.png)
+
+* **App shell** with a topbar and sidebar — switch between *Crunchyroll*, *Hidive* and *ADN*, with light & dark themes.
+* **Queue grouped by series** — each series is a collapsible card and every episode shows its dub, subtitle and quality at a glance.
+* **Live per-step progress** — the active download surfaces each stream (video, audio and subtitles per language) plus the decrypt and mux phases as they run.
+
+Run the GUI build and open <http://localhost:3000> (from source: `pnpm run gui`).
+
 ## Legal Warning
 
 This application is not endorsed by or affiliated with *Crunchyroll*, *Hidive* or *AnimationDigitalNetwork*. This application enables you to download videos for offline viewing which may be forbidden by law in your country. The usage of this application may also cause a violation of the *Terms of Service* between you and the stream provider. This tool is not responsible for your actions; please make an informed decision before using this application.
