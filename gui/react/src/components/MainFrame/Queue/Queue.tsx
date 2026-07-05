@@ -56,7 +56,7 @@ const EmptyState: React.FC = () => (
 );
 
 const Queue: React.FC = () => {
-	const { data, current } = useDownloadManager();
+	const { data, current, steps } = useDownloadManager();
 	const queue = React.useContext(queueContext);
 	const msg = React.useContext(messageChannelContext);
 
@@ -79,7 +79,7 @@ const Queue: React.FC = () => {
 
 	return (
 		<Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
-			{hasActive && <ActiveDownload data={data} current={current} />}
+			{hasActive && <ActiveDownload data={data} current={current} steps={steps} />}
 
 			{queue.length > 0 && (
 				<>

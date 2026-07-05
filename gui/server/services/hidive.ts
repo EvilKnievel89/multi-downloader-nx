@@ -13,6 +13,7 @@ class HidiveHandler extends Base implements MessageHandler {
 	constructor(ws: WebSocketHandler) {
 		super(ws);
 		this.hidive = new Hidive();
+		this.hidive.onStage = (stage) => this.emitStage(stage);
 		this.initState();
 	}
 

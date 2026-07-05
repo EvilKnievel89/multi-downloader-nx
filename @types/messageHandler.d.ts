@@ -171,6 +171,9 @@ export type ProgressData = {
 
 export type PossibleMessages = keyof ServiceHandler;
 
+/** Which media stream a progress tick belongs to. */
+export type StreamType = 'video' | 'audio' | 'subtitle';
+
 export type DownloadInfo = {
 	image: string;
 	parent: {
@@ -179,6 +182,23 @@ export type DownloadInfo = {
 	title: string;
 	language: LanguageItem;
 	fileName: string;
+	/** Set by the service cores so the GUI can attribute progress to a step. */
+	type?: StreamType;
+};
+
+/**
+ * A discrete step transition inside a running download that has no streamdl
+ * progress of its own (subtitle fetch, decryption, muxing). Emitted by the
+ * service cores via their optional `onStage` hook; the GUI turns these into a
+ * live step checklist alongside the video/audio progress steps.
+ */
+export type DownloadStage = {
+	kind: 'video' | 'audio' | 'subtitle' | 'decrypt' | 'mux';
+	state: 'start' | 'done' | 'fail';
+	/** Human-readable language name, when the step is language-specific. */
+	lang?: string;
+	/** Extra qualifier, e.g. 'video'/'audio' for decrypt or 'mkvmerge'/'ffmpeg' for mux. */
+	label?: string;
 };
 
 export type ExtendedProgress = {

@@ -13,6 +13,7 @@ class CrunchyHandler extends Base implements MessageHandler {
 	constructor(ws: WebSocketHandler) {
 		super(ws);
 		this.crunchy = new Crunchy();
+		this.crunchy.onStage = (stage) => this.emitStage(stage);
 		this.crunchy.refreshToken();
 		this.initState();
 		this.getDefaults();

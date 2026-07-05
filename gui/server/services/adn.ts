@@ -13,6 +13,7 @@ class ADNHandler extends Base implements MessageHandler {
 	constructor(ws: WebSocketHandler) {
 		super(ws);
 		this.adn = new AnimationDigitalNetwork();
+		this.adn.onStage = (stage) => this.emitStage(stage);
 		this.initState();
 		this.getDefaults();
 	}

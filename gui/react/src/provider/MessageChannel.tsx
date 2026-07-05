@@ -19,7 +19,8 @@ export class RandomEventHandler {
 		finish: [],
 		queueChange: [],
 		current: [],
-		log: []
+		log: [],
+		downloadStage: []
 	};
 
 	public on<T extends keyof RandomEvents>(name: T, listener: Handler<T>) {

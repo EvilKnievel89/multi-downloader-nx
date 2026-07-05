@@ -26,7 +26,7 @@ import Helper from './modules/module.helper';
 
 // Types
 import { ServiceClass } from './@types/serviceClassInterface';
-import { AuthData, AuthResponse, SearchData, SearchResponse, SearchResponseItem } from './@types/messageHandler';
+import { AuthData, AuthResponse, DownloadStage, SearchData, SearchResponse, SearchResponseItem } from './@types/messageHandler';
 import { sxItem } from './crunchy';
 import { DownloadedMedia } from './@types/hidiveTypes';
 import { ADNSearch, ADNSearchShow } from './@types/adnSearch';
@@ -39,6 +39,8 @@ import { FetchParams } from './modules/module.fetch';
 export default class AnimationDigitalNetwork implements ServiceClass {
 	public cfg: yamlCfg.ConfigObject;
 	public locale: string;
+	/** Optional GUI hook: relays subtitle/mux stage transitions. No-op for the CLI. */
+	public onStage?: (stage: DownloadStage) => void;
 	private token: Record<string, any>;
 	private req: reqModule.Req;
 	private posAlignMap: { [key: string]: number } = {
@@ -451,6 +453,7 @@ export default class AnimationDigitalNetwork implements ServiceClass {
 		if (options.syncTiming) {
 			await merger.createDelays();
 		}
+		if (bin.MKVmerge || bin.FFmpeg) this.onStage?.({ kind: 'mux', state: 'start', label: bin.MKVmerge ? 'mkvmerge' : 'ffmpeg' });
 		if (bin.MKVmerge) {
 			await merger.merge('mkvmerge', bin.MKVmerge);
 			isMuxed = true;
@@ -461,6 +464,7 @@ export default class AnimationDigitalNetwork implements ServiceClass {
 			console.info('\nDone!\n');
 			return;
 		}
+		if (isMuxed) this.onStage?.({ kind: 'mux', state: 'done', label: bin.MKVmerge ? 'mkvmerge' : 'ffmpeg' });
 		if (isMuxed && !options.nocleanup) merger.cleanUp();
 	}
 
@@ -798,13 +802,15 @@ export default class AnimationDigitalNetwork implements ServiceClass {
 												title: data.show.title
 											},
 											title: data.title,
-											language: audDub
+											language: audDub,
+											type: 'video'
 										})
 									: undefined
 							}).download();
 							if (!dlStreamByPl.ok) {
 								console.error(`DL Stats: ${JSON.stringify(dlStreamByPl.parts)}\n`);
 								dlFailed = true;
+								this.onStage?.({ kind: 'video', state: 'fail', lang: audDub.name });
 							}
 							files.push({
 								type: 'Video',
@@ -933,6 +939,7 @@ export default class AnimationDigitalNetwork implements ServiceClass {
 					}
 					sxData.language = subLang;
 					if (options.dlsubs.includes('all') || options.dlsubs.includes(subLang.locale)) {
+						this.onStage?.({ kind: 'subtitle', state: 'start', lang: subLang.language ?? subLang.name });
 						let subBody =
 							'[Script Info]' +
 							'\nScriptType:V4.00+' +

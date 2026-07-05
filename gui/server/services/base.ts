@@ -1,4 +1,4 @@
-import { DownloadInfo, FolderTypes, GuiState, ProgressData, QueueItem } from '../../../@types/messageHandler';
+import { DownloadInfo, DownloadStage, FolderTypes, GuiState, ProgressData, QueueItem } from '../../../@types/messageHandler';
 import { RandomEvent, RandomEvents } from '../../../@types/randomEvents';
 import WebSocketHandler from '../websocket';
 import open from 'open';
@@ -59,6 +59,15 @@ export default class Base {
 				}
 			});
 		};
+	}
+
+	/**
+	 * Relay a discrete download-stage transition (subtitle fetch, decrypt, mux)
+	 * from a service core to the GUI. Bound and handed to the core's `onStage`
+	 * hook by each service handler.
+	 */
+	emitStage(stage: DownloadStage) {
+		this.sendMessage({ name: 'downloadStage', data: stage });
 	}
 
 	sendMessage<T extends keyof RandomEvents>(data: RandomEvent<T>) {

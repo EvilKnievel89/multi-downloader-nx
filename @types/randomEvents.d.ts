@@ -1,4 +1,4 @@
-import { ExtendedProgress, QueueItem } from './messageHandler';
+import { DownloadStage, ExtendedProgress, QueueItem } from './messageHandler';
 
 export type LogLine = {
 	level: string;
@@ -12,6 +12,7 @@ export type RandomEvents = {
 	queueChange: QueueItem[];
 	current: QueueItem | undefined;
 	log: LogLine;
+	downloadStage: DownloadStage;
 };
 
 export interface RandomEvent<T extends keyof RandomEvents> {

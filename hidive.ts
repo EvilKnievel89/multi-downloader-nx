@@ -26,7 +26,7 @@ import parseFileName, { Variable } from './modules/module.filename';
 import { downloaded } from './modules/module.downloadArchive';
 import parseSelect from './modules/module.parseSelect';
 import { AvailableFilenameVars } from './modules/module.args';
-import { AuthData, AuthResponse, SearchData, SearchResponse, SearchResponseItem } from './@types/messageHandler';
+import { AuthData, AuthResponse, DownloadStage, SearchData, SearchResponse, SearchResponseItem } from './@types/messageHandler';
 import { ServiceClass } from './@types/serviceClassInterface';
 import { sxItem } from './crunchy';
 import { Hit, NewHidiveSearch } from './@types/newHidiveSearch';
@@ -41,6 +41,8 @@ import { KeyContainer } from 'widevine';
 
 export default class Hidive implements ServiceClass {
 	public cfg: yamlCfg.ConfigObject;
+	/** Optional GUI hook: relays decrypt/mux stage transitions. No-op for the CLI. */
+	public onStage?: (stage: DownloadStage) => void;
 	private token: Record<string, any>;
 	private req: reqModule.Req;
 
@@ -952,13 +954,15 @@ export default class Hidive implements ServiceClass {
 								title: selectedEpisode.seriesTitle
 							},
 							title: selectedEpisode.title,
-							language: chosenAudios[0].language
+							language: chosenAudios[0].language,
+							type: 'video'
 						})
 					: undefined
 			}).download();
 			if (!videoDownload.ok) {
 				console.error(`DL Stats: ${JSON.stringify(videoDownload.parts)}\n`);
 				dlFailed = true;
+				this.onStage?.({ kind: 'video', state: 'fail', lang: chosenAudios[0].language.name });
 			} else {
 				if (chosenVideoSegments.pssh_wvd || chosenVideoSegments.pssh_prd) {
 					console.info('Decryption Needed, attempting to decrypt');
@@ -975,6 +979,7 @@ export default class Hidive implements ServiceClass {
 							commandVideo = `input="${tempTsFile}.video.enc.m4s",stream=video,output="${tempTsFile}.video.m4s"` + commandBase;
 						}
 
+						this.onStage?.({ kind: 'decrypt', state: 'start', label: 'video', lang: chosenAudios[0].language.name });
 						console.info('Started decrypting video,', this.cfg.bin.shaka ? 'using shaka' : 'using mp4decrypt');
 						const decryptVideo = Helper.exec(
 							this.cfg.bin.shaka ? 'shaka-packager' : 'mp4decrypt',
@@ -1047,13 +1052,15 @@ export default class Hidive implements ServiceClass {
 									title: selectedEpisode.seriesTitle
 								},
 								title: selectedEpisode.title,
-								language: chosenAudioSegments.language
+								language: chosenAudioSegments.language,
+								type: 'audio'
 							})
 						: undefined
 				}).download();
 				if (!audioDownload.ok) {
 					console.error(`DL Stats: ${JSON.stringify(audioDownload.parts)}\n`);
 					dlFailed = true;
+					this.onStage?.({ kind: 'audio', state: 'fail', lang: chosenAudioSegments.language.name });
 				}
 				if (chosenAudioSegments.pssh_wvd || chosenAudioSegments.pssh_prd) {
 					console.info('Decryption Needed, attempting to decrypt');
@@ -1070,6 +1077,7 @@ export default class Hidive implements ServiceClass {
 							commandAudio = `input="${tempTsFile}.audio.enc.m4s",stream=audio,output="${tempTsFile}.audio.m4s"` + commandBase;
 						}
 
+						this.onStage?.({ kind: 'decrypt', state: 'start', label: 'audio', lang: chosenAudioSegments.language.name });
 						console.info('Started decrypting audio');
 						const decryptAudio = Helper.exec(
 							this.cfg.bin.shaka ? 'shaka-packager' : 'mp4decrypt',
@@ -1138,6 +1146,7 @@ export default class Hidive implements ServiceClass {
 					}
 					sxData.language = subLang;
 					if (options.dlsubs.includes('all') || options.dlsubs.includes(subLang.locale)) {
+						this.onStage?.({ kind: 'subtitle', state: 'start', lang: subLang.language ?? subLang.name });
 						const getVttContent = await this.req.getData(sub.url);
 						if (getVttContent.ok && getVttContent.res) {
 							let sBody = await getVttContent.res.text();
@@ -1264,6 +1273,7 @@ export default class Hidive implements ServiceClass {
 		if (options.syncTiming) {
 			await merger.createDelays();
 		}
+		if (bin.MKVmerge || bin.FFmpeg) this.onStage?.({ kind: 'mux', state: 'start', label: bin.MKVmerge ? 'mkvmerge' : 'ffmpeg' });
 		if (bin.MKVmerge) {
 			await merger.merge('mkvmerge', bin.MKVmerge);
 			isMuxed = true;
@@ -1274,6 +1284,7 @@ export default class Hidive implements ServiceClass {
 			console.info('\nDone!\n');
 			return;
 		}
+		if (isMuxed) this.onStage?.({ kind: 'mux', state: 'done', label: bin.MKVmerge ? 'mkvmerge' : 'ffmpeg' });
 		if (isMuxed && !options.nocleanup) merger.cleanUp();
 	}
 

@@ -31,7 +31,7 @@ import { CrunchyStreams, PlaybackData } from './@types/playbackData';
 import { downloaded } from './modules/module.downloadArchive';
 import parseSelect from './modules/module.parseSelect';
 import { AvailableFilenameVars, getDefault } from './modules/module.args';
-import { AuthData, AuthResponse, Episode, ResponseBase, SearchData, SearchResponse, SearchResponseItem } from './@types/messageHandler';
+import { AuthData, AuthResponse, DownloadStage, Episode, ResponseBase, SearchData, SearchResponse, SearchResponseItem } from './@types/messageHandler';
 import { ServiceClass } from './@types/serviceClassInterface';
 import { CrunchyAndroidEpisodes } from './@types/crunchyAndroidEpisodes';
 import { parse } from './modules/module.transform-mpd';
@@ -54,6 +54,8 @@ export type sxItem = {
 export default class Crunchy implements ServiceClass {
 	public cfg: yamlCfg.ConfigObject;
 	public locale: string;
+	/** Optional GUI hook: relays subtitle/decrypt/mux stage transitions. No-op for the CLI. */
+	public onStage?: (stage: DownloadStage) => void;
 	private token: Record<string, any>;
 	private req: reqModule.Req;
 	private cmsToken: {
@@ -2332,13 +2334,15 @@ export default class Crunchy implements ServiceClass {
 												title: medias.seasonTitle
 											},
 											title: medias.episodeTitle,
-											language: lang
+											language: lang,
+											type: 'video'
 										})
 									: undefined
 							}).download();
 							if (!videoDownload.ok) {
 								console.error(`DL Stats: ${JSON.stringify(videoDownload.parts)}\n`);
 								dlFailed = true;
+								this.onStage?.({ kind: 'video', state: 'fail', lang: lang.name });
 							}
 							dlVideoOnce = true;
 							videoDownloaded = true;
@@ -2374,13 +2378,15 @@ export default class Crunchy implements ServiceClass {
 												title: medias.seasonTitle
 											},
 											title: medias.episodeTitle,
-											language: lang
+											language: lang,
+											type: 'audio'
 										})
 									: undefined
 							}).download();
 							if (!audioDownload.ok) {
 								console.error(`DL Stats: ${JSON.stringify(audioDownload.parts)}\n`);
 								dlFailed = true;
+								this.onStage?.({ kind: 'audio', state: 'fail', lang: lang.name });
 							}
 							audioDownloaded = true;
 						} else if (options.noaudio) {
@@ -2408,6 +2414,7 @@ export default class Crunchy implements ServiceClass {
 								}
 
 								if (videoDownloaded) {
+									this.onStage?.({ kind: 'decrypt', state: 'start', label: 'video', lang: lang.name });
 									console.info('Started decrypting video,', this.cfg.bin.shaka ? 'using shaka' : 'using mp4decrypt');
 									const decryptVideo = Helper.exec(
 										this.cfg.bin.shaka ? 'shaka-packager' : 'mp4decrypt',
@@ -2439,6 +2446,7 @@ export default class Crunchy implements ServiceClass {
 								}
 
 								if (audioDownloaded) {
+									this.onStage?.({ kind: 'decrypt', state: 'start', label: 'audio', lang: lang.name });
 									console.info('Started decrypting audio,', this.cfg.bin.shaka ? 'using shaka' : 'using mp4decrypt');
 									const decryptAudio = Helper.exec(
 										this.cfg.bin.shaka ? 'shaka-packager' : 'mp4decrypt',
@@ -2669,13 +2677,15 @@ export default class Crunchy implements ServiceClass {
 													title: medias.seasonTitle
 												},
 												title: medias.episodeTitle,
-												language: lang
+												language: lang,
+												type: 'video'
 											})
 										: undefined
 								}).download();
 								if (!dlStreamByPl.ok) {
 									console.error(`DL Stats: ${JSON.stringify(dlStreamByPl.parts)}\n`);
 									dlFailed = true;
+									this.onStage?.({ kind: 'video', state: 'fail', lang: lang.name });
 								}
 								files.push({
 									type: 'Video',
@@ -2794,6 +2804,7 @@ export default class Crunchy implements ServiceClass {
 						)
 							continue;
 						if ((options.dlsubs.includes('all') || options.dlsubs.includes(langItem.locale)) && subsItem?.url) {
+							this.onStage?.({ kind: 'subtitle', state: 'start', lang: langItem.language ?? langItem.name });
 							const subsAssReq = await this.req.getData(subsItem.url, {
 								headers: api.crunchyDefHeader
 							});
@@ -3119,6 +3130,7 @@ export default class Crunchy implements ServiceClass {
 		if (options.syncTiming) {
 			await merger.createDelays();
 		}
+		if (bin.MKVmerge || bin.FFmpeg) this.onStage?.({ kind: 'mux', state: 'start', label: bin.MKVmerge ? 'mkvmerge' : 'ffmpeg' });
 		if (bin.MKVmerge) {
 			await merger.merge('mkvmerge', bin.MKVmerge);
 			isMuxed = true;
@@ -3129,6 +3141,7 @@ export default class Crunchy implements ServiceClass {
 			console.info('\nDone!\n');
 			return;
 		}
+		if (isMuxed) this.onStage?.({ kind: 'mux', state: 'done', label: bin.MKVmerge ? 'mkvmerge' : 'ffmpeg' });
 		if (isMuxed && !options.nocleanup) merger.cleanUp();
 	}
 
