@@ -16,7 +16,14 @@ const SERVICES: ServiceEntry[] = [
 	{ key: 'adn', label: 'AnimationDigitalNetwork', color: '#7b61ff' }
 ];
 
-const SideBar: React.FC = () => {
+type SideBarProps = {
+	/** Whether the temporary (mobile) drawer is open. Ignored by the permanent drawer. */
+	mobileOpen: boolean;
+	/** Close the temporary drawer — also fired after a navigation so the overlay dismisses. */
+	onClose: () => void;
+};
+
+const SideBar: React.FC<SideBarProps> = ({ mobileOpen, onClose }) => {
 	const messageHandler = React.useContext(messageChannelContext);
 	const [store, dispatch] = useStore();
 	const { enqueueSnackbar } = useSnackbar();
@@ -30,7 +37,10 @@ const SideBar: React.FC = () => {
 		})();
 	}, [messageHandler, version, dispatch]);
 
-	const setView = (next: View) => dispatch({ type: 'view', payload: next });
+	const setView = (next: View) => {
+		dispatch({ type: 'view', payload: next });
+		onClose();
+	};
 
 	const selectService = async (next: ServiceEntry['key']) => {
 		if (!messageHandler) return;
@@ -46,74 +56,96 @@ const SideBar: React.FC = () => {
 		setView('downloads');
 	};
 
-	return (
-		<Drawer
-			variant="permanent"
-			sx={{
-				width: DRAWER_WIDTH,
-				flexShrink: 0,
-				'& .MuiDrawer-paper': { width: DRAWER_WIDTH, boxSizing: 'border-box', position: 'relative', height: '100%' }
-			}}
-		>
-			<Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-				<List
-					sx={{ flexGrow: 1, overflowY: 'auto', px: 1 }}
-					subheader={
-						<ListSubheader component="div" sx={{ bgcolor: 'transparent', fontWeight: 700, letterSpacing: '0.06em' }}>
-							SERVICES
-						</ListSubheader>
-					}
-				>
-					{SERVICES.map((s) => {
-						const active = service === s.key;
-						return (
-							<ListItemButton key={s.key} selected={active && view === 'downloads'} onClick={() => selectService(s.key)} sx={{ borderRadius: 2, mb: 0.5 }}>
-								<ListItemIcon sx={{ minWidth: 32 }}>
-									<Box
-										sx={{
-											width: 12,
-											height: 12,
-											borderRadius: '50%',
-											bgcolor: s.color,
-											boxShadow: active ? `0 0 0 3px ${s.color}44` : 'none'
-										}}
-									/>
-								</ListItemIcon>
-								<ListItemText primary={s.label} primaryTypographyProps={{ noWrap: true, fontSize: 14 }} />
-								{active && <FiberManualRecord sx={{ fontSize: 10, color: 'success.main' }} />}
-							</ListItemButton>
-						);
-					})}
+	const content = (
+		<Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+			<List
+				sx={{ flexGrow: 1, overflowY: 'auto', px: 1 }}
+				subheader={
+					<ListSubheader component="div" sx={{ bgcolor: 'transparent', fontWeight: 700, letterSpacing: '0.06em' }}>
+						SERVICES
+					</ListSubheader>
+				}
+			>
+				{SERVICES.map((s) => {
+					const active = service === s.key;
+					return (
+						<ListItemButton key={s.key} selected={active && view === 'downloads'} onClick={() => selectService(s.key)} sx={{ borderRadius: 2, mb: 0.5 }}>
+							<ListItemIcon sx={{ minWidth: 32 }}>
+								<Box
+									sx={{
+										width: 12,
+										height: 12,
+										borderRadius: '50%',
+										bgcolor: s.color,
+										boxShadow: active ? `0 0 0 3px ${s.color}44` : 'none'
+									}}
+								/>
+							</ListItemIcon>
+							<ListItemText primary={s.label} primaryTypographyProps={{ noWrap: true, fontSize: 14 }} />
+							{active && <FiberManualRecord sx={{ fontSize: 10, color: 'success.main' }} />}
+						</ListItemButton>
+					);
+				})}
 
-					<Divider sx={{ my: 1 }} />
+				<Divider sx={{ my: 1 }} />
 
-					<ListItemButton selected={view === 'console'} onClick={() => setView('console')} sx={{ borderRadius: 2, mb: 0.5 }}>
-						<ListItemIcon sx={{ minWidth: 32 }}>
-							<TerminalOutlined fontSize="small" />
-						</ListItemIcon>
-						<ListItemText primary="Console" primaryTypographyProps={{ fontSize: 14 }} />
-					</ListItemButton>
-					<ListItemButton selected={view === 'settings'} onClick={() => setView('settings')} sx={{ borderRadius: 2 }}>
-						<ListItemIcon sx={{ minWidth: 32 }}>
-							<SettingsOutlined fontSize="small" />
-						</ListItemIcon>
-						<ListItemText primary="Settings" primaryTypographyProps={{ fontSize: 14 }} />
-					</ListItemButton>
-				</List>
+				<ListItemButton selected={view === 'console'} onClick={() => setView('console')} sx={{ borderRadius: 2, mb: 0.5 }}>
+					<ListItemIcon sx={{ minWidth: 32 }}>
+						<TerminalOutlined fontSize="small" />
+					</ListItemIcon>
+					<ListItemText primary="Console" primaryTypographyProps={{ fontSize: 14 }} />
+				</ListItemButton>
+				<ListItemButton selected={view === 'settings'} onClick={() => setView('settings')} sx={{ borderRadius: 2 }}>
+					<ListItemIcon sx={{ minWidth: 32 }}>
+						<SettingsOutlined fontSize="small" />
+					</ListItemIcon>
+					<ListItemText primary="Settings" primaryTypographyProps={{ fontSize: 14 }} />
+				</ListItemButton>
+			</List>
 
-				<Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-					<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-						<FiberManualRecord sx={{ fontSize: 10, color: 'success.main' }} />
-						<Typography variant="caption" color="text.secondary">
-							Connected
-						</Typography>
-					</Box>
+			<Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+					<FiberManualRecord sx={{ fontSize: 10, color: 'success.main' }} />
 					<Typography variant="caption" color="text.secondary">
-						{version ? `v${version}` : ''}
+						Connected
 					</Typography>
 				</Box>
+				<Typography variant="caption" color="text.secondary">
+					{version ? `v${version}` : ''}
+				</Typography>
 			</Box>
-		</Drawer>
+		</Box>
+	);
+
+	return (
+		<>
+			{/* Phones / small tablets: overlay drawer toggled by the TopBar hamburger. */}
+			<Drawer
+				variant="temporary"
+				open={mobileOpen}
+				onClose={onClose}
+				ModalProps={{ keepMounted: true }}
+				sx={{
+					display: { xs: 'block', md: 'none' },
+					'& .MuiDrawer-paper': { width: DRAWER_WIDTH, boxSizing: 'border-box' }
+				}}
+			>
+				{content}
+			</Drawer>
+
+			{/* Wider screens: permanent, in-flow drawer. */}
+			<Drawer
+				variant="permanent"
+				sx={{
+					display: { xs: 'none', md: 'block' },
+					width: DRAWER_WIDTH,
+					flexShrink: 0,
+					'& .MuiDrawer-paper': { width: DRAWER_WIDTH, boxSizing: 'border-box', position: 'relative', height: '100%' }
+				}}
+			>
+				{content}
+			</Drawer>
+		</>
 	);
 };
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormControl, InputLabel, MenuItem, OutlinedInput, Select, Theme, useTheme } from '@mui/material';
+import { Box, FormControl, InputLabel, MenuItem, OutlinedInput, Select, Theme, useTheme } from '@mui/material';
 
 export type MultiSelectProps = {
 	values: string[];
@@ -30,8 +30,8 @@ const MultiSelect: React.FC<MultiSelectProps> = (props) => {
 	const theme = useTheme();
 
 	return (
-		<div>
-			<FormControl sx={{ width: 300 }}>
+		<Box sx={{ width: { xs: '100%', md: 'auto' } }}>
+			<FormControl sx={{ width: { xs: '100%', md: 300 } }}>
 				<InputLabel id="multi-select-label">{props.title}</InputLabel>
 				<Select
 					labelId="multi-select-label"
@@ -58,7 +58,7 @@ const MultiSelect: React.FC<MultiSelectProps> = (props) => {
 					))}
 				</Select>
 			</FormControl>
-		</div>
+		</Box>
 	);
 };
 

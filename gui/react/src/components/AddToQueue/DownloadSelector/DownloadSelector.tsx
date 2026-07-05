@@ -81,15 +81,18 @@ const DownloadSelector: React.FC<DownloadSelectorProps> = ({ onFinish }) => {
 	};
 
 	return (
-		<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-			<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '5px' }}>
+		<Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+			<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '5px', width: { xs: '100%', md: 'auto' }, minWidth: 0 }}>
 				<Box
 					sx={{
-						width: '50rem',
-						height: '21rem',
+						width: { xs: '100%', md: '50rem' },
+						maxWidth: '100%',
 						margin: '10px',
 						display: 'flex',
-						justifyContent: 'space-between'
+						flexDirection: { xs: 'column', md: 'row' },
+						gap: { xs: 2.5, md: 0 },
+						justifyContent: 'space-between',
+						alignItems: { xs: 'stretch', md: 'flex-start' }
 						//backgroundColor: '#ffffff30',
 					}}
 				>
@@ -97,12 +100,13 @@ const DownloadSelector: React.FC<DownloadSelectorProps> = ({ onFinish }) => {
 						sx={{
 							display: 'flex',
 							flexDirection: 'column',
-							alignItems: 'center',
+							alignItems: { xs: 'stretch', md: 'center' },
+							width: { xs: '100%', md: 'auto' },
 							gap: '0.7rem'
 							//backgroundColor: '#ff000030'
 						}}
 					>
-						<Typography sx={{ fontSize: '1.4rem' }}>General Options</Typography>
+						<Typography sx={{ fontSize: '1.4rem', textAlign: 'center' }}>General Options</Typography>
 						<TextField
 							value={store.downloadOptions.id}
 							required
@@ -168,12 +172,13 @@ const DownloadSelector: React.FC<DownloadSelectorProps> = ({ onFinish }) => {
 						sx={{
 							display: 'flex',
 							flexDirection: 'column',
-							alignItems: 'center',
+							alignItems: { xs: 'stretch', md: 'center' },
+							width: { xs: '100%', md: 'auto' },
 							gap: '0.7rem'
 							//backgroundColor: '#00000020'
 						}}
 					>
-						<Typography sx={{ fontSize: '1.4rem' }}>Episode Options</Typography>
+						<Typography sx={{ fontSize: '1.4rem', textAlign: 'center' }}>Episode Options</Typography>
 						<Box
 							sx={{
 								display: 'flex',
@@ -188,7 +193,7 @@ const DownloadSelector: React.FC<DownloadSelectorProps> = ({ onFinish }) => {
 									borderWidth: '1px',
 									borderRadius: '5px',
 									//backgroundColor: '#ff4567',
-									width: '15rem',
+									width: { xs: '100%', md: '15rem' },
 									height: '3.5rem',
 									display: 'flex',
 									'&:hover': {
@@ -250,12 +255,13 @@ const DownloadSelector: React.FC<DownloadSelectorProps> = ({ onFinish }) => {
 						sx={{
 							display: 'flex',
 							flexDirection: 'column',
-							alignItems: 'center',
+							alignItems: { xs: 'stretch', md: 'center' },
+							width: { xs: '100%', md: 'auto' },
 							gap: '0.7rem'
 							//backgroundColor: '#00ff0020'
 						}}
 					>
-						<Typography sx={{ fontSize: '1.4rem' }}>Language Options</Typography>
+						<Typography sx={{ fontSize: '1.4rem', textAlign: 'center' }}>Language Options</Typography>
 						<MultiSelect
 							title="Dub Languages"
 							values={availableDubs}
@@ -294,7 +300,9 @@ const DownloadSelector: React.FC<DownloadSelectorProps> = ({ onFinish }) => {
 									sx={{
 										borderRadius: '5px',
 										//backgroundColor: '#ff4567',
-										width: '15rem',
+										width: { xs: 'auto', md: '15rem' },
+										flex: { xs: 1, md: 'none' },
+										minWidth: 0,
 										height: '3.5rem',
 										display: 'flex'
 									}}
@@ -376,7 +384,7 @@ const DownloadSelector: React.FC<DownloadSelectorProps> = ({ onFinish }) => {
 								payload: { ...store.downloadOptions, fileName: e.target.value }
 							});
 						}}
-						sx={{ width: '87%' }}
+						sx={{ width: { xs: '100%', md: '87%' } }}
 						label="Filename Overwrite"
 					/>
 					<Tooltip title={<Typography>Click here to see the documentation</Typography>} arrow placement="top">

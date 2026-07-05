@@ -1,4 +1,4 @@
-import { Box, List, ListItem, Typography, Divider, Dialog, Select, MenuItem, FormControl, InputLabel, Checkbox } from '@mui/material';
+import { Box, List, ListItem, Typography, Divider, Dialog, Select, MenuItem, FormControl, InputLabel, Checkbox, useMediaQuery, useTheme } from '@mui/material';
 import { CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import React, { RefObject } from 'react';
 import useStore from '../../../../hooks/useStore';
@@ -10,6 +10,8 @@ const EpisodeListing: React.FC = () => {
 
 	const [season, setSeason] = React.useState<'all' | string>('all');
 	const { enqueueSnackbar } = useSnackbar();
+	const theme = useTheme();
+	const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
 	const seasons = React.useMemo(() => {
 		const s: string[] = [];
@@ -43,8 +45,8 @@ const EpisodeListing: React.FC = () => {
 	};
 
 	return (
-		<Dialog open={store.episodeListing.length > 0} onClose={close} scroll="paper" maxWidth="xl" sx={{ p: 2 }}>
-			<Box sx={{ display: 'grid', gridTemplateColumns: '1fr 200px 20px' }}>
+		<Dialog open={store.episodeListing.length > 0} onClose={close} scroll="paper" fullScreen={fullScreen} fullWidth maxWidth="xl" sx={{ p: 2 }}>
+			<Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr auto', sm: '1fr 200px 20px' }, alignItems: 'center', gap: 1, p: { xs: 1, sm: 0 } }}>
 				<Typography color="text.primary" variant="h5" sx={{ textAlign: 'center', alignItems: 'center', justifyContent: 'center', display: 'flex' }}>
 					Episodes
 				</Typography>
@@ -89,7 +91,9 @@ const EpisodeListing: React.FC = () => {
 									backdropFilter: isSelected ? 'brightness(1.5)' : '',
 									'&:hover': { backdropFilter: 'brightness(1.5)' },
 									display: 'grid',
-									gridTemplateColumns: '25px 50px 1fr 5fr'
+									gridTemplateColumns: { xs: '24px 44px 1.4fr 2fr', sm: '25px 50px 1fr 5fr' },
+									columnGap: { xs: 0.5, sm: 0 },
+									alignItems: 'center'
 								}}
 								onClick={() => {
 									let arr: string[] = [];
@@ -105,9 +109,15 @@ const EpisodeListing: React.FC = () => {
 								<Typography color="text.primary" sx={{ textAlign: 'center' }}>
 									{idStr}
 								</Typography>
-								<img ref={imageRef} style={{ width: 'inherit', maxHeight: '200px', minWidth: '150px' }} src={item.img} alt="thumbnail" />
-								<Box sx={{ display: 'flex', flexDirection: 'column', pl: 1 }}>
-									<Box sx={{ display: 'grid', gridTemplateColumns: '1fr min-content' }}>
+								<Box
+									component="img"
+									ref={imageRef}
+									sx={{ width: '100%', maxHeight: '200px', minWidth: { xs: 0, sm: '150px' }, objectFit: 'cover', borderRadius: 1 }}
+									src={item.img}
+									alt="thumbnail"
+								/>
+								<Box sx={{ display: 'flex', flexDirection: 'column', pl: 1, minWidth: 0 }}>
+									<Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) min-content', gap: 1 }}>
 										<Typography color="text.primary" variant="h5">
 											{item.name}
 										</Typography>

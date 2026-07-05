@@ -5,18 +5,18 @@ import { messageChannelContext } from '../../provider/MessageChannel';
 import useStore from '../../hooks/useStore';
 
 const Row: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
-	<Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, py: 0.75 }}>
+	<Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', gap: { xs: 0, sm: 2 }, py: 0.75 }}>
 		<Typography variant="body2" color="text.secondary">
 			{label}
 		</Typography>
-		<Typography variant="body2" sx={{ fontWeight: 600, textAlign: 'right', wordBreak: 'break-word' }}>
+		<Typography variant="body2" sx={{ fontWeight: 600, textAlign: { xs: 'left', sm: 'right' }, wordBreak: 'break-word' }}>
 			{value}
 		</Typography>
 	</Box>
 );
 
 const SectionCard: React.FC<{ title: string; subtitle?: string; children: React.ReactNode }> = ({ title, subtitle, children }) => (
-	<Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+	<Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderRadius: 3 }}>
 		<Typography variant="h6" sx={{ mb: subtitle ? 0.25 : 1.5 }}>
 			{title}
 		</Typography>
@@ -44,7 +44,7 @@ const SettingsView: React.FC = () => {
 	];
 
 	return (
-		<Box sx={{ p: 3, maxWidth: 900, mx: 'auto' }}>
+		<Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 900, mx: 'auto' }}>
 			<Stack spacing={3}>
 				<SectionCard title="Download defaults" subtitle="Read-only in this version. Edit cli-defaults.yml to change these permanently.">
 					<Row label="Quality" value={downloadOptions.q === 0 ? 'Best available' : downloadOptions.q} />

@@ -1,5 +1,5 @@
 import { PauseCircleFilled, PlayCircleFilled } from '@mui/icons-material';
-import { Button } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import React from 'react';
 import { messageChannelContext } from '../provider/MessageChannel';
 import Require from './Require';
@@ -35,8 +35,21 @@ const StartQueueButton: React.FC = () => {
 
 	return (
 		<Require value={messageChannel}>
-			<Button startIcon={start ? <PauseCircleFilled /> : <PlayCircleFilled />} variant="contained" onClick={change} sx={{ maxHeight: '2.3rem' }}>
-				{start ? 'Stop Queue' : 'Start Queue'}
+			<Button
+				startIcon={start ? <PauseCircleFilled /> : <PlayCircleFilled />}
+				variant="contained"
+				onClick={change}
+				aria-label={start ? 'Stop queue' : 'Start queue'}
+				sx={{
+					maxHeight: '2.3rem',
+					minWidth: { xs: 0, md: 'auto' },
+					px: { xs: 1.25, md: 2 },
+					'& .MuiButton-startIcon': { mr: { xs: 0, md: 1 }, ml: { xs: 0, md: -0.5 } }
+				}}
+			>
+				<Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
+					{start ? 'Stop Queue' : 'Start Queue'}
+				</Box>
 			</Button>
 		</Require>
 	);

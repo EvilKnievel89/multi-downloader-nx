@@ -24,6 +24,9 @@ const AppShell: React.FC = () => {
 	const msg = React.useContext(messageChannelContext);
 	const [{ view }] = useStore();
 	const [logs, setLogs] = React.useState<LogLine[]>([]);
+	// On phones / small tablets the SideBar collapses behind a hamburger and
+	// opens as a temporary overlay; on wider screens it stays permanent.
+	const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
 
 	React.useEffect(() => {
 		if (!msg) return;
@@ -47,9 +50,9 @@ const AppShell: React.FC = () => {
 
 	return (
 		<Box sx={{ height: '100vh', width: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-			<TopBar />
+			<TopBar onMenuClick={() => setMobileNavOpen(true)} />
 			<Box sx={{ flex: 1, minHeight: 0, display: 'flex' }}>
-				<SideBar />
+				<SideBar mobileOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
 				<Box sx={{ flex: 1, minWidth: 0, position: 'relative', bgcolor: 'background.default' }}>
 					<Box sx={slot(view === 'downloads')}>
 						<DownloadsView />

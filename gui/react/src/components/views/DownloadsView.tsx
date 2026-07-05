@@ -13,7 +13,7 @@ const DownloadsView: React.FC = () => {
 	const [{ service }] = useStore();
 
 	return (
-		<Box sx={{ p: 3, width: '100%' }}>
+		<Box sx={{ p: { xs: 1.5, md: 3 }, width: '100%' }}>
 			<Box sx={{ width: '100%', maxWidth: '62rem', mx: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
 				{!service && (
 					<Alert severity="info" sx={{ width: '100%' }}>

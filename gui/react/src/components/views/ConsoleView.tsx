@@ -33,14 +33,19 @@ const ConsoleView: React.FC<{ logs: LogLine[]; onClear: () => void }> = ({ logs,
 	}, [logs, autoScroll]);
 
 	return (
-		<Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-			<Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
-				<Typography variant="h6" sx={{ flexGrow: 1 }}>
+		<Box sx={{ p: { xs: 1.5, md: 3 }, height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+			<Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
+				<Typography variant="h6" sx={{ flexGrow: 1, minWidth: 0 }}>
 					Console
 				</Typography>
 				<FormControlLabel
+					sx={{ mr: 0 }}
 					control={<Switch size="small" checked={autoScroll} onChange={(e) => setAutoScroll(e.target.checked)} />}
-					label={<Typography variant="body2">Auto-scroll</Typography>}
+					label={
+						<Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>
+							Auto-scroll
+						</Typography>
+					}
 				/>
 				<Button size="small" variant="outlined" color="inherit" startIcon={<DeleteSweepOutlined />} onClick={onClear}>
 					Clear
@@ -56,7 +61,7 @@ const ConsoleView: React.FC<{ logs: LogLine[]; onClear: () => void }> = ({ logs,
 					border: 1,
 					borderColor: 'divider',
 					borderRadius: 2,
-					p: 2,
+					p: { xs: 1, md: 2 },
 					fontFamily: '"SFMono-Regular", "Menlo", "Consolas", monospace',
 					fontSize: 13,
 					lineHeight: 1.6
@@ -72,7 +77,7 @@ const ConsoleView: React.FC<{ logs: LogLine[]; onClear: () => void }> = ({ logs,
 							<Box component="span" sx={{ color: 'text.disabled', flexShrink: 0, userSelect: 'none' }}>
 								{formatTime(line.time)}
 							</Box>
-							<Box component="span" sx={{ color: levelColor(line.level), flexShrink: 0, width: 52, userSelect: 'none' }}>
+							<Box component="span" sx={{ color: levelColor(line.level), flexShrink: 0, width: { xs: 42, sm: 52 }, userSelect: 'none' }}>
 								{line.level.toUpperCase()}
 							</Box>
 							<Box component="span" sx={{ color: levelColor(line.level) }}>

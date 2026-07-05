@@ -29,11 +29,11 @@ const MetaChips: React.FC<{ item: QueueItem }> = ({ item }) => {
 		<Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" alignItems="center" sx={{ flexShrink: 0 }}>
 			{item.dubLang.length > 0 && (
 				<Tooltip title="Dub language(s)" arrow placement="top">
-					<Chip size="small" variant="outlined" icon={<TranslateIcon />} label={item.dubLang.join(', ')} />
+					<Chip size="small" variant="outlined" icon={<TranslateIcon />} label={item.dubLang.join(', ')} sx={{ maxWidth: '100%' }} />
 				</Tooltip>
 			)}
 			<Tooltip title="Subtitle(s)" arrow placement="top">
-				<Chip size="small" variant="outlined" icon={<SubtitlesIcon />} label={hasSubs ? item.dlsubs.join(', ') : 'none'} />
+				<Chip size="small" variant="outlined" icon={<SubtitlesIcon />} label={hasSubs ? item.dlsubs.join(', ') : 'none'} sx={{ maxWidth: '100%' }} />
 			</Tooltip>
 			<Tooltip title="Quality" arrow placement="top">
 				<Chip size="small" variant="outlined" icon={<HighQualityIcon />} label={qualityLabel(item.q)} />
@@ -54,12 +54,8 @@ const EpisodeRow: React.FC<{ entry: IndexedItem; onDelete: (index: number) => vo
 				'&:hover': { bgcolor: 'action.hover' }
 			}}
 		>
-			<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 1, px: 1.5 }}>
-				<Chip
-					size="small"
-					label={epLabel}
-					sx={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', flexShrink: 0, borderRadius: 1 }}
-				/>
+			<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 1, px: 1.5, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
+				<Chip size="small" label={epLabel} sx={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', flexShrink: 0, borderRadius: 1 }} />
 				<Typography variant="body2" sx={{ flex: 1, minWidth: '4rem' }} noWrap title={item.title}>
 					{item.title}
 				</Typography>
@@ -83,11 +79,7 @@ const EpisodeRow: React.FC<{ entry: IndexedItem; onDelete: (index: number) => vo
 			    the ActiveDownload card above. */}
 			<Box sx={{ px: 1.5, pb: 0.75 }}>
 				<Tooltip title="Queued — 0%" arrow placement="bottom-start">
-					<LinearProgress
-						variant="determinate"
-						value={0}
-						sx={{ height: 3, borderRadius: 2, opacity: 0.7, bgcolor: 'action.hover' }}
-					/>
+					<LinearProgress variant="determinate" value={0} sx={{ height: 3, borderRadius: 2, opacity: 0.7, bgcolor: 'action.hover' }} />
 				</Tooltip>
 			</Box>
 		</Box>
@@ -155,9 +147,7 @@ const QueueGroup: React.FC<{
 						<DeleteIcon fontSize="small" />
 					</IconButton>
 				</Tooltip>
-				<ExpandMoreIcon
-					sx={{ color: 'text.secondary', transition: 'transform 200ms', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
-				/>
+				<ExpandMoreIcon sx={{ color: 'text.secondary', transition: 'transform 200ms', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }} />
 			</Box>
 			<Collapse in={open} timeout="auto" unmountOnExit>
 				<Box sx={{ px: 1, pt: 1, pb: 1, display: 'flex', flexDirection: 'column', gap: 0.25, borderTop: 1, borderColor: 'divider' }}>

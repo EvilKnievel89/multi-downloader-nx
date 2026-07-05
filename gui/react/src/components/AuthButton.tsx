@@ -1,4 +1,4 @@
-import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@mui/material';
+import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, useMediaQuery, useTheme } from '@mui/material';
 import { Check, Close } from '@mui/icons-material';
 import React from 'react';
 import { messageChannelContext } from '../provider/MessageChannel';
@@ -17,6 +17,8 @@ const AuthButton: React.FC = () => {
 	const [passwordError, setPasswordError] = React.useState(false);
 
 	const messageChannel = React.useContext(messageChannelContext);
+	const theme = useTheme();
+	const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
 	const [loading, setLoading] = React.useState(false);
 	const [error, setError] = React.useState<Error | undefined>(undefined);
@@ -55,8 +57,8 @@ const AuthButton: React.FC = () => {
 
 	return (
 		<Require value={messageChannel}>
-			<Dialog open={open}>
-				<Dialog open={!!error}>
+			<Dialog open={open} fullScreen={fullScreen} fullWidth>
+				<Dialog open={!!error} fullScreen={fullScreen} fullWidth>
 					<DialogTitle>Error during Authentication</DialogTitle>
 					<DialogContentText>
 						{error?.name}
@@ -110,8 +112,21 @@ const AuthButton: React.FC = () => {
 					</Button>
 				</DialogActions>
 			</Dialog>
-			<Button startIcon={authed ? <Check /> : <Close />} variant="contained" onClick={() => setOpen(true)}>
-				Authenticate
+			<Button
+				startIcon={authed ? <Check /> : <Close />}
+				variant="contained"
+				onClick={() => setOpen(true)}
+				aria-label="Authenticate"
+				sx={{
+					maxHeight: '2.3rem',
+					minWidth: { xs: 0, md: 'auto' },
+					px: { xs: 1.25, md: 2 },
+					'& .MuiButton-startIcon': { mr: { xs: 0, md: 1 }, ml: { xs: 0, md: -0.5 } }
+				}}
+			>
+				<Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
+					Authenticate
+				</Box>
 			</Button>
 		</Require>
 	);

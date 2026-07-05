@@ -62,11 +62,7 @@ const StepRow: React.FC<{ step: DownloadStep; stats?: ExtendedProgress }> = ({ s
 			<Box sx={{ mt: '1px', color: iconColor, display: 'flex', flexShrink: 0 }}>{kindIcon(step.kind)}</Box>
 			<Box sx={{ flex: 1, minWidth: 0 }}>
 				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-					<Typography
-						variant="body2"
-						noWrap
-						sx={{ flex: 1, minWidth: 0, fontWeight: active ? 600 : 400, color: done || failed ? 'text.secondary' : 'text.primary' }}
-					>
+					<Typography variant="body2" noWrap sx={{ flex: 1, minWidth: 0, fontWeight: active ? 600 : 400, color: done || failed ? 'text.secondary' : 'text.primary' }}>
 						{stepLabel(step)}
 					</Typography>
 					{failed && <ErrorOutlineIcon fontSize="small" color="error" />}
@@ -86,8 +82,8 @@ const StepRow: React.FC<{ step: DownloadStep; stats?: ExtendedProgress }> = ({ s
 					))}
 				{active && hasPercent && stats && (
 					<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block', fontVariantNumeric: 'tabular-nums' }}>
-						{stats.progress.cur} / {stats.progress.total} parts · {formatTime(stats.progress.time)} ·{' '}
-						{(stats.progress.downloadSpeed / 1024 / 1024).toFixed(2)} MB/s · {(stats.progress.bytes / 1024 / 1024).toFixed(2)} MB
+						{stats.progress.cur} / {stats.progress.total} parts · {formatTime(stats.progress.time)} · {(stats.progress.downloadSpeed / 1024 / 1024).toFixed(2)} MB/s ·{' '}
+						{(stats.progress.bytes / 1024 / 1024).toFixed(2)} MB
 					</Typography>
 				)}
 			</Box>
@@ -119,12 +115,21 @@ const ActiveDownload: React.FC<{ data?: ExtendedProgress; current?: QueueItem; s
 			}}
 		>
 			<CardContent sx={{ '&:last-child': { pb: 2 } }}>
-				<Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+				<Box sx={{ display: 'flex', gap: { xs: 1.5, sm: 2 }, alignItems: 'center' }}>
 					<Box
 						component="img"
 						src={image}
 						alt={episodeTitle}
-						sx={{ width: 132, height: 82, flexShrink: 0, objectFit: 'cover', borderRadius: 1.5, bgcolor: 'action.hover', boxShadow: 2, userSelect: 'none' }}
+						sx={{
+							width: { xs: 96, sm: 132 },
+							height: { xs: 60, sm: 82 },
+							flexShrink: 0,
+							objectFit: 'cover',
+							borderRadius: 1.5,
+							bgcolor: 'action.hover',
+							boxShadow: 2,
+							userSelect: 'none'
+						}}
 					/>
 					<Box sx={{ flex: 1, minWidth: 0 }}>
 						<Chip size="small" color="primary" icon={<DownloadingIcon />} label="Downloading" sx={{ mb: 0.75 }} />
