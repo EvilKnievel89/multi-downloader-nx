@@ -6,6 +6,12 @@ export type LogLine = {
 	time: number;
 };
 
+/** Live authentication state of the active service, pushed to the GUI. */
+export type AuthState = {
+	service: string;
+	loggedIn: boolean;
+};
+
 export type RandomEvents = {
 	progress: ExtendedProgress;
 	finish: undefined;
@@ -13,6 +19,7 @@ export type RandomEvents = {
 	current: QueueItem | undefined;
 	log: LogLine;
 	downloadStage: DownloadStage;
+	authState: AuthState;
 };
 
 export interface RandomEvent<T extends keyof RandomEvents> {

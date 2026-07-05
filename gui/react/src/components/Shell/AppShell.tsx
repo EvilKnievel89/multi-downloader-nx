@@ -5,6 +5,7 @@ import SideBar from './SideBar';
 import DownloadsView from '../views/DownloadsView';
 import ConsoleView from '../views/ConsoleView';
 import SettingsView from '../views/SettingsView';
+import AuthIndicator from '../AuthIndicator';
 import { messageChannelContext } from '../../provider/MessageChannel';
 import useStore from '../../hooks/useStore';
 import { LogLine, RandomEvent } from '../../../../../@types/randomEvents';
@@ -65,6 +66,7 @@ const AppShell: React.FC = () => {
 					</Box>
 				</Box>
 			</Box>
+			<AuthIndicator />
 		</Box>
 	);
 };

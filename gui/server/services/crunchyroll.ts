@@ -10,11 +10,24 @@ import * as yargs from '../../../modules/module.app-args';
 class CrunchyHandler extends Base implements MessageHandler {
 	private crunchy: Crunchy;
 	public name = 'crunchy';
+	// Holds the single in-flight forced re-login so concurrent operations share
+	// one attempt instead of each hammering the auth endpoint.
+	private reloginAttempt: Promise<boolean> | null = null;
+	// Resolves once the initial token load/refresh has finished. Auth checks await
+	// this so they don't race the constructor's refresh: the on-disk access token
+	// is often stale on startup and only becomes valid after this refresh, so a
+	// check that runs too early would wrongly report "not logged in".
+	private ready: Promise<void>;
 	constructor(ws: WebSocketHandler) {
 		super(ws);
 		this.crunchy = new Crunchy();
 		this.crunchy.onStage = (stage) => this.emitStage(stage);
-		this.crunchy.refreshToken();
+		// Kick off the initial refresh and, once it settles, broadcast the real auth
+		// state — this corrects any early checkToken() that lost the race above.
+		this.ready = this.crunchy
+			.refreshToken()
+			.then(async () => this.emitAuthState(await this.crunchy.getProfile(true)))
+			.catch(() => this.emitAuthState(false));
 		this.initState();
 		this.getDefaults();
 	}
@@ -24,9 +37,59 @@ class CrunchyHandler extends Base implements MessageHandler {
 		this.crunchy.locale = _default.locale;
 	}
 
-	public async listEpisodes(id: string): Promise<EpisodeListResponse> {
+	/**
+	 * Broadcast the current Crunchyroll auth state to every connected GUI client
+	 * so the floating "not logged in" indicator can react live.
+	 */
+	private emitAuthState(loggedIn: boolean) {
+		this.sendMessage({ name: 'authState', data: { service: this.name, loggedIn } });
+	}
+
+	/**
+	 * Guarantee we are authenticated before running an operation.
+	 *
+	 * Crunchyroll can revoke the access token server-side before its local expiry,
+	 * so `refreshToken(true)` still considers it valid while the API already
+	 * rejects it ("token invalid"). When we detect that, we make exactly ONE
+	 * automatic re-login attempt via the stored refresh token. The resulting state
+	 * is broadcast so the GUI shows/hides the warning indicator. Returns whether we
+	 * ended up authenticated.
+	 */
+	private async ensureAuth(): Promise<boolean> {
+		await this.ready;
 		this.getDefaults();
-		await this.crunchy.refreshToken(true);
+		// Normal path: refresh only when the token is actually time-expired.
+		await this.crunchy.refreshToken(true, true);
+		if (await this.crunchy.getProfile(true)) {
+			this.emitAuthState(true);
+			return true;
+		}
+		// Token rejected even though it was not time-expired → one forced re-login.
+		// Share a single attempt across concurrent operations (max one try).
+		if (!this.reloginAttempt) {
+			this.reloginAttempt = (async () => {
+				console.warn('Crunchyroll token is invalid — attempting a single automatic re-login.');
+				await this.crunchy.refreshToken(false, true);
+				return this.crunchy.getProfile(true);
+			})();
+		}
+		let loggedIn = false;
+		try {
+			loggedIn = await this.reloginAttempt;
+		} finally {
+			this.reloginAttempt = null;
+		}
+		this.emitAuthState(loggedIn);
+		if (loggedIn) {
+			console.info('Crunchyroll automatic re-login succeeded.');
+		} else {
+			console.error('Crunchyroll automatic re-login failed — please authenticate again.');
+		}
+		return loggedIn;
+	}
+
+	public async listEpisodes(id: string): Promise<EpisodeListResponse> {
+		await this.ensureAuth();
 		return { isOk: true, value: (await this.crunchy.listSeriesID(id)).list };
 	}
 
@@ -47,8 +110,7 @@ class CrunchyHandler extends Base implements MessageHandler {
 	}
 
 	public async resolveItems(data: ResolveItemsData): Promise<boolean> {
-		this.getDefaults();
-		await this.crunchy.refreshToken(true);
+		await this.ensureAuth();
 		console.debug(`Got resolve options: ${JSON.stringify(data)}`);
 		const res = await this.crunchy.downloadFromSeriesID(data.id, data);
 		if (!res.isOk) return res.isOk;
@@ -73,8 +135,7 @@ class CrunchyHandler extends Base implements MessageHandler {
 	}
 
 	public async search(data: SearchData): Promise<SearchResponse> {
-		this.getDefaults();
-		await this.crunchy.refreshToken(true);
+		await this.ensureAuth();
 		if (!data['search-type']) data['search-type'] = 'series';
 		console.debug(`Got search options: ${JSON.stringify(data)}`);
 		const crunchySearch = await this.crunchy.doSearch(data);
@@ -86,20 +147,20 @@ class CrunchyHandler extends Base implements MessageHandler {
 	}
 
 	public async checkToken(): Promise<CheckTokenResponse> {
-		if (await this.crunchy.getProfile()) {
-			return { isOk: true, value: undefined };
-		} else {
-			return { isOk: false, reason: new Error('') };
-		}
+		await this.ready;
+		const loggedIn = await this.crunchy.getProfile(true);
+		this.emitAuthState(loggedIn);
+		return loggedIn ? { isOk: true, value: undefined } : { isOk: false, reason: new Error('Not authenticated') };
 	}
 
-	public auth(data: AuthData) {
-		return this.crunchy.doAuth(data);
+	public async auth(data: AuthData) {
+		const res = await this.crunchy.doAuth(data);
+		this.emitAuthState(res.isOk);
+		return res;
 	}
 
 	protected async performDownload(data: DownloadData) {
-		this.getDefaults();
-		await this.crunchy.refreshToken(true);
+		await this.ensureAuth();
 		console.debug(`Got download options: ${JSON.stringify(data)}`);
 		this.setDownloading(true);
 		const _default = yargs.appArgv(this.crunchy.cfg.cli, true);
