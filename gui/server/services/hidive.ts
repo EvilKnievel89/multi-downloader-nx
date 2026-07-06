@@ -1,4 +1,14 @@
-import { AuthData, CheckTokenResponse, DownloadData, EpisodeListResponse, MessageHandler, ResolveItemsData, SearchData, SearchResponse } from '../../../@types/messageHandler';
+import {
+	AuthData,
+	CheckTokenResponse,
+	DownloadData,
+	DownloadResult,
+	EpisodeListResponse,
+	MessageHandler,
+	ResolveItemsData,
+	SearchData,
+	SearchResponse
+} from '../../../@types/messageHandler';
 import Hidive from '../../../hidive';
 import { getDefault } from '../../../modules/module.args';
 import { languages } from '../../../modules/module.langsData';
@@ -107,15 +117,28 @@ class HidiveHandler extends Base implements MessageHandler {
 		};
 	}
 
-	protected async performDownload(data: DownloadData) {
+	protected async performDownload(data: DownloadData): Promise<DownloadResult> {
 		this.setDownloading(true);
 		console.debug(`Got download options: ${JSON.stringify(data)}`);
 		const _default = yargs.appArgv(this.hidive.cfg.cli, true);
 		const res = await this.hidive.selectSeries(parseInt(data.id), data.e, false, false);
-		if (!res.isOk || !res.showData) return this.alertError(new Error('Download failed upstream, check for additional logs'));
+		if (!res.isOk || !res.showData) {
+			const er = new Error('Download failed upstream, check for additional logs');
+			this.alertError(er);
+			return { success: false, error: er.message };
+		}
+		if (res.value.length === 0) {
+			const er = new Error(`No episodes matched '${data.e}' for ${data.id}`);
+			this.alertError(er);
+			return { success: false, error: er.message };
+		}
 
+		const errors: string[] = [];
 		for (const ep of res.value) {
-			await this.hidive.downloadEpisode(ep, {
+			// downloadEpisode returns a ResponseBase — surface a per-episode failure
+			// so the download is recorded as failed (with its reason) in the history.
+			// The core already logs the reason internally, so we only capture it here.
+			const epRes = await this.hidive.downloadEpisode(ep, {
 				..._default,
 				callbackMaker: this.makeProgressHandler.bind(this),
 				dubLang: data.dubLang,
@@ -126,7 +149,11 @@ class HidiveHandler extends Base implements MessageHandler {
 				noaudio: data.noaudio,
 				novids: data.novids
 			});
+			if (!epRes || !epRes.isOk) {
+				errors.push(epRes && !epRes.isOk ? epRes.reason.message : 'Episode download failed');
+			}
 		}
+		return errors.length > 0 ? { success: false, error: errors.join('; ') } : { success: true };
 	}
 }
 

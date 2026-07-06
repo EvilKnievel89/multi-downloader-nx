@@ -1,5 +1,5 @@
 import { GUIConfig } from '../modules/module.cfg-loader';
-import { AuthResponse, CheckTokenResponse, EpisodeListResponse, FolderTypes, QueueItem, ResolveItemsData, SearchData, SearchResponse } from './messageHandler';
+import { AuthResponse, CheckTokenResponse, EpisodeListResponse, FolderTypes, HistoryEntry, QueueItem, ResolveItemsData, SearchData, SearchResponse } from './messageHandler';
 
 export type WSMessage<T extends keyof MessageTypes, P extends 0 | 1 = 0> = {
 	name: T;
@@ -42,4 +42,8 @@ export type MessageTypes = {
 	clearQueue: [undefined, undefined];
 	setDownloadQueue: [boolean, undefined];
 	getDownloadQueue: [undefined, boolean];
+	getHistory: [undefined, HistoryEntry[]];
+	requeue: [QueueItem, undefined];
+	removeFromHistory: [string, undefined];
+	clearHistory: [undefined, undefined];
 };

@@ -10,6 +10,7 @@ import { SnackbarProvider, SnackbarKey } from 'notistack';
 import Store from './provider/Store';
 import ErrorHandler from './provider/ErrorHandler';
 import QueueProvider from './provider/QueueProvider';
+import HistoryProvider from './provider/HistoryProvider';
 
 const notistackRef = React.createRef<SnackbarProvider>();
 const onClickDismiss = (key: SnackbarKey | undefined) => () => {
@@ -35,9 +36,11 @@ root.render(
 					<MessageChannel>
 						<ServiceProvider>
 							<QueueProvider>
-								<Box sx={{ width: '100%' }}>
-									<App />
-								</Box>
+								<HistoryProvider>
+									<Box sx={{ width: '100%' }}>
+										<App />
+									</Box>
+								</HistoryProvider>
 							</QueueProvider>
 						</ServiceProvider>
 					</MessageChannel>

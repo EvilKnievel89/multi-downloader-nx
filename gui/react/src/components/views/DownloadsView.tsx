@@ -1,6 +1,7 @@
 import React from 'react';
 import { Alert, Box } from '@mui/material';
 import MainFrame from '../MainFrame/MainFrame';
+import DownloadHistory from '../MainFrame/DownloadHistory';
 import useStore from '../../hooks/useStore';
 
 /**
@@ -21,6 +22,7 @@ const DownloadsView: React.FC = () => {
 					</Alert>
 				)}
 				<MainFrame />
+				<DownloadHistory />
 			</Box>
 		</Box>
 	);

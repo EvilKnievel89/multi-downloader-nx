@@ -1,7 +1,8 @@
-import { DownloadInfo, DownloadStage, FolderTypes, GuiState, ProgressData, QueueItem } from '../../../@types/messageHandler';
+import { DownloadInfo, DownloadResult, DownloadStage, FolderTypes, GuiState, HistoryEntry, ProgressData, QueueItem } from '../../../@types/messageHandler';
 import { RandomEvent, RandomEvents } from '../../../@types/randomEvents';
 import WebSocketHandler from '../websocket';
 import open from 'open';
+import { randomUUID } from 'crypto';
 import { cfg } from '..';
 import path from 'path';
 import { console } from '../../../modules/log';
@@ -20,6 +21,10 @@ export default class Base {
 	private queue: QueueItem[] = [];
 	private workOnQueue = false;
 
+	/** Newest-first, capped log of finished download attempts (persisted per service). */
+	private history: HistoryEntry[] = [];
+	private static readonly HISTORY_LIMIT = 200;
+
 	version(): Promise<string> {
 		return new Promise(() => {
 			return packageJson.version;
@@ -27,14 +32,22 @@ export default class Base {
 	}
 
 	initState() {
-		if (this.state.services[this.name]) {
-			this.queue = this.state.services[this.name].queue;
-			this.queueChange();
-		} else {
+		if (!this.state.services[this.name]) {
 			this.state.services[this.name] = {
-				queue: []
+				queue: [],
+				history: []
 			};
+		} else {
+			this.queue = this.state.services[this.name].queue;
+			// `history` is absent in state files written before this feature — default it.
+			this.history = this.state.services[this.name].history ?? [];
 		}
+		// Always (re-)broadcast so a service switch authoritatively resets the GUI to
+		// THIS service's queue/history — even for a never-used service, whose data is
+		// empty (otherwise the frontend keeps showing the previous service's entries,
+		// since it seeds once and thereafter only follows these broadcasts).
+		this.queueChange();
+		this.historyChange();
 	}
 
 	setDownloading(downloading: boolean) {
@@ -131,6 +144,41 @@ export default class Base {
 		return this.workOnQueue;
 	}
 
+	public async getHistory(): Promise<HistoryEntry[]> {
+		return this.history;
+	}
+
+	public async removeFromHistory(id: string) {
+		// Address by stable id, not array position: recordHistory prepends on every
+		// completed download, so a positional index can shift out from under a click.
+		this.history = this.history.filter((entry) => entry.id !== id);
+		this.historyChange();
+	}
+
+	public async clearHistory() {
+		this.history = [];
+		this.historyChange();
+	}
+
+	/** Re-add a finished item to the queue (retry). Does not auto-start. */
+	public requeue(item: QueueItem) {
+		this.addToQueue([item]);
+	}
+
+	/** Prepend a finished attempt, cap the log and broadcast + persist it. */
+	private recordHistory(item: QueueItem, success: boolean, error?: string) {
+		this.history = [{ id: randomUUID(), item, success, error, time: Date.now() }, ...this.history].slice(0, Base.HISTORY_LIMIT);
+		this.historyChange();
+	}
+
+	private historyChange() {
+		this.sendMessage({ name: 'historyChange', data: this.history });
+		if (this.state.services[this.name]) {
+			this.state.services[this.name].history = this.history;
+			setState(this.state);
+		}
+	}
+
 	private async queueChange() {
 		this.sendMessage({ name: 'queueChange', data: this.queue });
 		if (this.workOnQueue && this.queue.length > 0 && !(await this.isDownloading())) {
@@ -164,11 +212,19 @@ export default class Base {
 	 * never reset, no further item would start, and the queue could not auto-stop.
 	 */
 	public async downloadItem(data: QueueItem) {
+		let success = false;
+		let errorMessage: string | undefined;
 		try {
-			await this.performDownload(data);
+			// Services report their own outcome (they handle most failures without
+			// throwing) and, on failure, a reason to surface in the history.
+			const result = await this.performDownload(data);
+			success = result.success;
+			errorMessage = result.error;
 		} catch (error) {
 			this.alertError(error as Error);
+			errorMessage = (error as Error).message;
 		} finally {
+			this.recordHistory(data, success, errorMessage);
 			this.sendMessage({ name: 'finish', data: undefined });
 			this.setDownloading(false);
 			this.onFinish();
@@ -177,7 +233,7 @@ export default class Base {
 
 	//Overriten
 	// eslint-disable-next-line
-	protected async performDownload(_: QueueItem) {
+	protected async performDownload(_: QueueItem): Promise<DownloadResult> {
 		throw new Error('performDownload not overriden');
 	}
 }

@@ -1,4 +1,4 @@
-import { DownloadStage, ExtendedProgress, QueueItem } from './messageHandler';
+import { DownloadStage, ExtendedProgress, HistoryEntry, QueueItem } from './messageHandler';
 
 export type LogLine = {
 	level: string;
@@ -20,6 +20,8 @@ export type RandomEvents = {
 	log: LogLine;
 	downloadStage: DownloadStage;
 	authState: AuthState;
+	/** Full download history for the active service, broadcast whenever it changes. */
+	historyChange: HistoryEntry[];
 };
 
 export interface RandomEvent<T extends keyof RandomEvents> {

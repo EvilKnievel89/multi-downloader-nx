@@ -125,5 +125,20 @@ export default class ServiceHandler {
 			respond((await this.service?.getDownloadQueue()) ?? false);
 		});
 		this.ws.events.on('isDownloading', async (_, respond) => respond((await this.service?.isDownloading()) ?? false));
+		this.ws.events.on('getHistory', async (_, respond) => {
+			respond((await this.service?.getHistory()) ?? []);
+		});
+		this.ws.events.on('requeue', async ({ data }, respond) => {
+			this.service?.requeue(data);
+			respond(undefined);
+		});
+		this.ws.events.on('removeFromHistory', async ({ data }, respond) => {
+			this.service?.removeFromHistory(data);
+			respond(undefined);
+		});
+		this.ws.events.on('clearHistory', async (_, respond) => {
+			this.service?.clearHistory();
+			respond(undefined);
+		});
 	}
 }

@@ -1,4 +1,14 @@
-import { AuthData, CheckTokenResponse, DownloadData, EpisodeListResponse, MessageHandler, ResolveItemsData, SearchData, SearchResponse } from '../../../@types/messageHandler';
+import {
+	AuthData,
+	CheckTokenResponse,
+	DownloadData,
+	DownloadResult,
+	EpisodeListResponse,
+	MessageHandler,
+	ResolveItemsData,
+	SearchData,
+	SearchResponse
+} from '../../../@types/messageHandler';
 import Crunchy from '../../../crunchy';
 import { getDefault } from '../../../modules/module.args';
 import { languages, subtitleLanguagesFilter } from '../../../modules/module.langsData';
@@ -159,7 +169,7 @@ class CrunchyHandler extends Base implements MessageHandler {
 		return res;
 	}
 
-	protected async performDownload(data: DownloadData) {
+	protected async performDownload(data: DownloadData): Promise<DownloadResult> {
 		await this.ensureAuth();
 		console.debug(`Got download options: ${JSON.stringify(data)}`);
 		this.setDownloading(true);
@@ -168,31 +178,39 @@ class CrunchyHandler extends Base implements MessageHandler {
 			dubLang: data.dubLang,
 			e: data.e
 		});
-		if (res.isOk) {
-			for (const select of res.value) {
-				if (
-					!(await this.crunchy.downloadEpisode(select, {
-						..._default,
-						skipsubs: false,
-						callbackMaker: this.makeProgressHandler.bind(this),
-						q: data.q,
-						fileName: data.fileName,
-						dlsubs: data.dlsubs,
-						dlVideoOnce: data.dlVideoOnce,
-						force: 'y',
-						novids: data.novids,
-						noaudio: data.noaudio,
-						hslang: data.hslang || 'none'
-					}))
-				) {
-					const er = new Error(`Unable to download episode ${data.e} from ${data.id}`);
-					er.name = 'Download error';
-					this.alertError(er);
-				}
-			}
-		} else {
+		if (!res.isOk) {
 			this.alertError(res.reason);
+			return { success: false, error: res.reason.message };
 		}
+		if (res.value.length === 0) {
+			const er = new Error(`No episodes matched '${data.e}' for ${data.id}`);
+			this.alertError(er);
+			return { success: false, error: er.message };
+		}
+		const errors: string[] = [];
+		for (const select of res.value) {
+			if (
+				!(await this.crunchy.downloadEpisode(select, {
+					..._default,
+					skipsubs: false,
+					callbackMaker: this.makeProgressHandler.bind(this),
+					q: data.q,
+					fileName: data.fileName,
+					dlsubs: data.dlsubs,
+					dlVideoOnce: data.dlVideoOnce,
+					force: 'y',
+					novids: data.novids,
+					noaudio: data.noaudio,
+					hslang: data.hslang || 'none'
+				}))
+			) {
+				const er = new Error(`Unable to download episode ${data.e} from ${data.id}`);
+				er.name = 'Download error';
+				this.alertError(er);
+				errors.push(er.message);
+			}
+		}
+		return errors.length > 0 ? { success: false, error: errors.join('; ') } : { success: true };
 	}
 }
 

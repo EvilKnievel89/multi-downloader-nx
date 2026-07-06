@@ -1,4 +1,14 @@
-import { AuthData, CheckTokenResponse, DownloadData, EpisodeListResponse, MessageHandler, ResolveItemsData, SearchData, SearchResponse } from '../../../@types/messageHandler';
+import {
+	AuthData,
+	CheckTokenResponse,
+	DownloadData,
+	DownloadResult,
+	EpisodeListResponse,
+	MessageHandler,
+	ResolveItemsData,
+	SearchData,
+	SearchResponse
+} from '../../../@types/messageHandler';
 import AnimationDigitalNetwork from '../../../adn';
 import { getDefault } from '../../../modules/module.args';
 import { languages } from '../../../modules/module.langsData';
@@ -112,37 +122,46 @@ class ADNHandler extends Base implements MessageHandler {
 		};
 	}
 
-	protected async performDownload(data: DownloadData) {
+	protected async performDownload(data: DownloadData): Promise<DownloadResult> {
 		this.setDownloading(true);
 		console.debug(`Got download options: ${JSON.stringify(data)}`);
 		const _default = yargs.appArgv(this.adn.cfg.cli, true);
 		const res = await this.adn.selectShow(parseInt(data.id), data.e, false, false);
-		if (res.isOk) {
-			for (const select of res.value) {
-				if (
-					!(await this.adn.getEpisode(select, {
-						..._default,
-						skipsubs: false,
-						callbackMaker: this.makeProgressHandler.bind(this),
-						q: data.q,
-						fileName: data.fileName,
-						dlsubs: data.dlsubs,
-						dlVideoOnce: data.dlVideoOnce,
-						force: 'y',
-						novids: data.novids,
-						noaudio: data.noaudio,
-						hslang: data.hslang || 'none',
-						dubLang: data.dubLang
-					}))
-				) {
-					const er = new Error(`Unable to download episode ${data.e} from ${data.id}`);
-					er.name = 'Download error';
-					this.alertError(er);
-				}
-			}
-		} else {
-			this.alertError(new Error('Failed to download episode, check for additional logs.'));
+		if (!res.isOk) {
+			const er = new Error('Failed to download episode, check for additional logs.');
+			this.alertError(er);
+			return { success: false, error: er.message };
 		}
+		if (res.value.length === 0) {
+			const er = new Error(`No episodes matched '${data.e}' for ${data.id}`);
+			this.alertError(er);
+			return { success: false, error: er.message };
+		}
+		const errors: string[] = [];
+		for (const select of res.value) {
+			if (
+				!(await this.adn.getEpisode(select, {
+					..._default,
+					skipsubs: false,
+					callbackMaker: this.makeProgressHandler.bind(this),
+					q: data.q,
+					fileName: data.fileName,
+					dlsubs: data.dlsubs,
+					dlVideoOnce: data.dlVideoOnce,
+					force: 'y',
+					novids: data.novids,
+					noaudio: data.noaudio,
+					hslang: data.hslang || 'none',
+					dubLang: data.dubLang
+				}))
+			) {
+				const er = new Error(`Unable to download episode ${data.e} from ${data.id}`);
+				er.name = 'Download error';
+				this.alertError(er);
+				errors.push(er.message);
+			}
+		}
+		return errors.length > 0 ? { success: false, error: errors.join('; ') } : { success: true };
 	}
 }
 

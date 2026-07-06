@@ -24,6 +24,10 @@ export interface MessageHandler {
 	clearQueue: () => void;
 	setDownloadQueue: (data: boolean) => void;
 	getDownloadQueue: () => Promise<boolean>;
+	getHistory: () => Promise<HistoryEntry[]>;
+	requeue: (item: QueueItem) => void;
+	removeFromHistory: (id: string) => void;
+	clearHistory: () => void;
 }
 
 export type FolderTypes = 'content' | 'config';
@@ -55,6 +59,31 @@ export type ResolveItemsData = {
 	fileName: string;
 	q: number;
 	dlsubs: string[];
+};
+
+/**
+ * A completed download attempt (one queue item), recorded for the Downloads
+ * history. `success` is authoritative — it reflects the service core's own
+ * result, so a download that fails before any progress step (auth/resolve) is
+ * still captured. `error` carries the failure reason when one is available.
+ */
+export type HistoryEntry = {
+	/** Stable id (generated at record time) — used to address entries for removal. */
+	id: string;
+	item: QueueItem;
+	success: boolean;
+	error?: string;
+	/** Completion time (ms since epoch). */
+	time: number;
+};
+
+/**
+ * Outcome of a service core's `performDownload`. `error` carries a human-readable
+ * reason for non-throwing failures so it can be surfaced in the history.
+ */
+export type DownloadResult = {
+	success: boolean;
+	error?: string;
 };
 
 export type SearchResponseItem = {
@@ -213,4 +242,5 @@ export type GuiState = {
 
 export type GuiStateService = {
 	queue: QueueItem[];
+	history: HistoryEntry[];
 };
