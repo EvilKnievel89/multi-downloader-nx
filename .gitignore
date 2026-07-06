@@ -46,3 +46,4 @@ widevine/*
 playready/*
 !playready/.gitkeep
 GUI-REWRITE-PLAN.md
+*.apk
