@@ -121,6 +121,10 @@ const DownloadHistory: React.FC = () => {
 
 	const onRetry = (entry: HistoryEntry) => {
 		msg.requeue(entry.item);
+		// The attempt is now back in the queue, so drop this finished record — a new
+		// history entry is recorded once the retry completes. Addressed by the entry's
+		// stable id so only the clicked record goes, even if the same item recurs.
+		msg.removeFromHistory(entry.id);
 		enqueueSnackbar(`Added "${entry.item.title}" back to the queue.`, { variant: 'success' });
 	};
 
