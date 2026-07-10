@@ -2,7 +2,7 @@ import { Add } from '@mui/icons-material';
 import { Box, Button, Dialog, Divider, useMediaQuery, useTheme } from '@mui/material';
 import React from 'react';
 import DownloadSelector from './DownloadSelector/DownloadSelector';
-import EpisodeListing from './DownloadSelector/Listing/EpisodeListing';
+import EpisodeSelectionDialog from './DownloadSelector/Listing/EpisodeSelectionDialog';
 import SearchBox from './SearchBox/SearchBox';
 
 const AddToQueue: React.FC<{ disabled?: boolean }> = ({ disabled }) => {
@@ -12,7 +12,7 @@ const AddToQueue: React.FC<{ disabled?: boolean }> = ({ disabled }) => {
 
 	return (
 		<Box>
-			<EpisodeListing />
+			<EpisodeSelectionDialog />
 			<Dialog open={isOpen} onClose={() => setOpen(false)} fullScreen={fullScreen} fullWidth maxWidth="md" PaperProps={{ elevation: 4 }}>
 				<Box sx={{ overflowX: 'auto' }}>
 					<SearchBox />
