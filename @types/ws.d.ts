@@ -42,6 +42,7 @@ export type MessageTypes = {
 	clearQueue: [undefined, undefined];
 	setDownloadQueue: [boolean, undefined];
 	getDownloadQueue: [undefined, boolean];
+	getResting: [undefined, number | undefined];
 	getHistory: [undefined, HistoryEntry[]];
 	requeue: [QueueItem, undefined];
 	removeFromHistory: [string, undefined];

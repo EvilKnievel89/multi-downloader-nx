@@ -22,6 +22,11 @@ export type RandomEvents = {
 	authState: AuthState;
 	/** Full download history for the active service, broadcast whenever it changes. */
 	historyChange: HistoryEntry[];
+	/**
+	 * Queue is pausing between batches to avoid service rate limits. `until` is the
+	 * epoch-ms timestamp the next download resumes at; `undefined` clears the notice.
+	 */
+	queueResting: { until: number } | undefined;
 };
 
 export interface RandomEvent<T extends keyof RandomEvents> {

@@ -22,7 +22,8 @@ export class RandomEventHandler {
 		log: [],
 		downloadStage: [],
 		authState: [],
-		historyChange: []
+		historyChange: [],
+		queueResting: []
 	};
 
 	public on<T extends keyof RandomEvents>(name: T, listener: Handler<T>) {
@@ -192,6 +193,7 @@ const MessageChannelProvider: FCWithChildren = ({ children }) => {
 			clearQueue: async () => await messageAndResponse(socket, { name: 'clearQueue', data: undefined }),
 			setDownloadQueue: async (data) => await messageAndResponse(socket, { name: 'setDownloadQueue', data }),
 			getDownloadQueue: async () => (await messageAndResponse(socket, { name: 'getDownloadQueue', data: undefined })).data,
+			getResting: async () => (await messageAndResponse(socket, { name: 'getResting', data: undefined })).data,
 			getHistory: async () => (await messageAndResponse(socket, { name: 'getHistory', data: undefined })).data,
 			requeue: (data) => {
 				messageAndResponse(socket, { name: 'requeue', data });

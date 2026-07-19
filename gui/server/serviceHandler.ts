@@ -124,6 +124,9 @@ export default class ServiceHandler {
 		this.ws.events.on('getDownloadQueue', async (_, respond) => {
 			respond((await this.service?.getDownloadQueue()) ?? false);
 		});
+		this.ws.events.on('getResting', async (_, respond) => {
+			respond((await this.service?.getResting()) ?? undefined);
+		});
 		this.ws.events.on('isDownloading', async (_, respond) => respond((await this.service?.isDownloading()) ?? false));
 		this.ws.events.on('getHistory', async (_, respond) => {
 			respond((await this.service?.getHistory()) ?? []);

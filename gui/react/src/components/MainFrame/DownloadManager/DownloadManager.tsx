@@ -55,6 +55,8 @@ const useDownloadManager = () => {
 	const [progressData, setProgressData] = React.useState<ExtendedProgress | undefined>();
 	const [current, setCurrent] = React.useState<undefined | QueueItem>();
 	const [steps, setSteps] = React.useState<DownloadStep[]>([]);
+	// Epoch-ms the queue resumes at while it is resting between batches (rate-limit pause).
+	const [restingUntil, setRestingUntil] = React.useState<number | undefined>();
 
 	React.useEffect(() => {
 		const progressHandler = (ev: RandomEvent<'progress'>) => {
@@ -100,20 +102,30 @@ const useDownloadManager = () => {
 			setProgressData(undefined);
 		};
 
+		const restingHandler = (ev: RandomEvent<'queueResting'>) => {
+			setRestingUntil(ev.data?.until);
+		};
+
+		// Seed the resting state on (re)connect: a rest emits no events for its full
+		// duration, so a page load mid-pause would otherwise show an idle-looking queue.
+		messageHandler?.getResting().then(setRestingUntil);
+
 		messageHandler?.randomEvents.on('progress', progressHandler);
 		messageHandler?.randomEvents.on('current', currentHandler);
 		messageHandler?.randomEvents.on('finish', finishHandler);
 		messageHandler?.randomEvents.on('downloadStage', stageHandler);
+		messageHandler?.randomEvents.on('queueResting', restingHandler);
 
 		return () => {
 			messageHandler?.randomEvents.removeListener('progress', progressHandler);
 			messageHandler?.randomEvents.removeListener('finish', finishHandler);
 			messageHandler?.randomEvents.removeListener('current', currentHandler);
 			messageHandler?.randomEvents.removeListener('downloadStage', stageHandler);
+			messageHandler?.randomEvents.removeListener('queueResting', restingHandler);
 		};
 	}, [messageHandler]);
 
-	return { data: progressData, current, steps };
+	return { data: progressData, current, steps, restingUntil };
 };
 
 export default useDownloadManager;

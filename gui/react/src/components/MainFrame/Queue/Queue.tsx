@@ -1,6 +1,7 @@
-import { Box, Chip, Stack, Typography } from '@mui/material';
+import { alpha, Box, Chip, Stack, Typography } from '@mui/material';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined';
+import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import React from 'react';
 import { QueueItem } from '../../../../../../@types/messageHandler';
 import { messageChannelContext } from '../../../provider/MessageChannel';
@@ -55,8 +56,50 @@ const EmptyState: React.FC = () => (
 	</Box>
 );
 
+/**
+ * Shown while the queue is paused between batches to avoid service rate limits.
+ * Counts down locally to the server-provided resume time (GUI and server share the
+ * same machine/clock), so the queue reads as intentionally paused, not stuck.
+ */
+const RestingBanner: React.FC<{ until: number }> = ({ until }) => {
+	const [remaining, setRemaining] = React.useState(() => Math.max(0, until - Date.now()));
+
+	React.useEffect(() => {
+		setRemaining(Math.max(0, until - Date.now()));
+		const id = setInterval(() => setRemaining(Math.max(0, until - Date.now())), 1000);
+		return () => clearInterval(id);
+	}, [until]);
+
+	const totalSeconds = Math.ceil(remaining / 1000);
+	const label = `${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, '0')}`;
+
+	return (
+		<Box
+			sx={{
+				display: 'flex',
+				alignItems: 'center',
+				gap: 1.5,
+				p: 2,
+				border: 1,
+				borderColor: 'warning.main',
+				borderRadius: 3,
+				bgcolor: (theme) => alpha(theme.palette.warning.main, 0.08),
+				color: 'text.primary'
+			}}
+		>
+			<HourglassBottomIcon sx={{ color: 'warning.main' }} />
+			<Box>
+				<Typography variant="subtitle2">Pausing to avoid rate limits</Typography>
+				<Typography variant="body2" color="text.secondary">
+					Next download resumes in {label}
+				</Typography>
+			</Box>
+		</Box>
+	);
+};
+
 const Queue: React.FC = () => {
-	const { data, current, steps } = useDownloadManager();
+	const { data, current, steps, restingUntil } = useDownloadManager();
 	const queue = React.useContext(queueContext);
 	const msg = React.useContext(messageChannelContext);
 
@@ -76,10 +119,13 @@ const Queue: React.FC = () => {
 
 	const groups = buildGroups(queue);
 	const hasActive = Boolean(data || current);
+	const isResting = restingUntil !== undefined;
 
 	return (
 		<Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
 			{hasActive && <ActiveDownload data={data} current={current} steps={steps} />}
+
+			{isResting && <RestingBanner until={restingUntil} />}
 
 			{queue.length > 0 && (
 				<>
@@ -96,7 +142,7 @@ const Queue: React.FC = () => {
 				</>
 			)}
 
-			{!hasActive && queue.length === 0 && <EmptyState />}
+			{!hasActive && !isResting && queue.length === 0 && <EmptyState />}
 		</Box>
 	);
 };

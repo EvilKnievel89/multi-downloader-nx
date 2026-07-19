@@ -24,6 +24,7 @@ export interface MessageHandler {
 	clearQueue: () => void;
 	setDownloadQueue: (data: boolean) => void;
 	getDownloadQueue: () => Promise<boolean>;
+	getResting: () => Promise<number | undefined>;
 	getHistory: () => Promise<HistoryEntry[]>;
 	requeue: (item: QueueItem) => void;
 	removeFromHistory: (id: string) => void;
