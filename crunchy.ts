@@ -2401,14 +2401,14 @@ export default class Crunchy implements ServiceClass {
 						) {
 							console.info('Decryption Needed, attempting to decrypt');
 							if (this.cfg.bin.mp4decrypt || this.cfg.bin.shaka) {
-								let commandBaseVideo = `--show-progress --key ${encryptionKeysVideo?.[0].kid}:${encryptionKeysVideo?.[0].key} `;
-								let commandBaseAudio = `--show-progress --key ${encryptionKeysAudio?.[0].kid}:${encryptionKeysAudio?.[0].key} `;
+								let commandBaseVideo = `--show-progress ${encryptionKeysVideo?.map((kb) => `--key ${kb.kid}:${kb.key}`).join(' ')} `;
+								let commandBaseAudio = `--show-progress ${encryptionKeysAudio?.map((kb) => `--key ${kb.kid}:${kb.key}`).join(' ')} `;
 								let commandVideo = commandBaseVideo + `"${tempTsFile}.video.enc.m4s" "${tempTsFile}.video.m4s"`;
 								let commandAudio = commandBaseAudio + `"${tempTsFile}.audio.enc.m4s" "${tempTsFile}.audio.m4s"`;
 
 								if (this.cfg.bin.shaka) {
-									commandBaseVideo = ` --enable_raw_key_decryption ${encryptionKeysVideo?.map((kb) => '--keys key_id=' + kb.kid + ':key=' + kb.key).join(' ')}`;
-									commandBaseAudio = ` --enable_raw_key_decryption ${encryptionKeysAudio?.map((kb) => '--keys key_id=' + kb.kid + ':key=' + kb.key).join(' ')}`;
+									commandBaseVideo = ` --enable_raw_key_decryption ${encryptionKeysVideo && encryptionKeysVideo.length > 0 ? `--keys "${encryptionKeysVideo.map((kb, i) => `label=KEY${i + 1}:key_id=${kb.kid}:key=${kb.key}`).join(',')}"` : ''}`;
+									commandBaseAudio = ` --enable_raw_key_decryption ${encryptionKeysAudio && encryptionKeysAudio.length > 0 ? `--keys "${encryptionKeysAudio.map((kb, i) => `label=KEY${i + 1}:key_id=${kb.kid}:key=${kb.key}`).join(',')}"` : ''}`;
 									commandVideo = `input="${tempTsFile}.video.enc.m4s",stream=video,output="${tempTsFile}.video.m4s"` + commandBaseVideo;
 									commandAudio = `input="${tempTsFile}.audio.enc.m4s",stream=audio,output="${tempTsFile}.audio.m4s"` + commandBaseAudio;
 								}

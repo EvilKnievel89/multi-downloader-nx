@@ -971,11 +971,11 @@ export default class Hidive implements ServiceClass {
 						return undefined;
 					}
 					if (this.cfg.bin.mp4decrypt || this.cfg.bin.shaka) {
-						let commandBase = `--show-progress --key ${encryptionKeys[0].kid}:${encryptionKeys[0].key} `;
+						let commandBase = `--show-progress ${encryptionKeys.map((kb) => `--key ${kb.kid}:${kb.key}`).join(' ')} `;
 						let commandVideo = commandBase + `"${tempTsFile}.video.enc.m4s" "${tempTsFile}.video.m4s"`;
 
 						if (this.cfg.bin.shaka) {
-							commandBase = ` --enable_raw_key_decryption ${encryptionKeys.map((kb) => '--keys key_id=' + kb.kid + ':key=' + kb.key).join(' ')}`;
+							commandBase = ` --enable_raw_key_decryption ${encryptionKeys && encryptionKeys.length > 0 ? `--keys "${encryptionKeys.map((kb, i) => `label=KEY${i + 1}:key_id=${kb.kid}:key=${kb.key}`).join(',')}"` : ''}`;
 							commandVideo = `input="${tempTsFile}.video.enc.m4s",stream=video,output="${tempTsFile}.video.m4s"` + commandBase;
 						}
 
@@ -1069,11 +1069,11 @@ export default class Hidive implements ServiceClass {
 						return undefined;
 					}
 					if (this.cfg.bin.mp4decrypt || this.cfg.bin.shaka) {
-						let commandBase = `--show-progress --key ${encryptionKeys[0].kid}:${encryptionKeys[0].key} `;
+						let commandBase = `--show-progress ${encryptionKeys.map((kb) => `--key ${kb.kid}:${kb.key}`).join(' ')} `;
 						let commandAudio = commandBase + `"${tempTsFile}.audio.enc.m4s" "${tempTsFile}.audio.m4s"`;
 
 						if (this.cfg.bin.shaka) {
-							commandBase = ` --enable_raw_key_decryption ${encryptionKeys.map((kb) => '--keys key_id=' + kb.kid + ':key=' + kb.key).join(' ')}`;
+							commandBase = ` --enable_raw_key_decryption ${encryptionKeys && encryptionKeys.length > 0 ? `--keys "${encryptionKeys.map((kb, i) => `label=KEY${i + 1}:key_id=${kb.kid}:key=${kb.key}`).join(',')}"` : ''}`;
 							commandAudio = `input="${tempTsFile}.audio.enc.m4s",stream=audio,output="${tempTsFile}.audio.m4s"` + commandBase;
 						}
 
